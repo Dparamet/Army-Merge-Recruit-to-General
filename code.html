@@ -1,0 +1,1595 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Army Merge: Recruit to General</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <link href="https://fonts.googleapis.com/css2?family=Fredoka:wght@400;600;700&family=Inter:wght@400;600;700&display=swap" rel="stylesheet">
+    <style>
+        /* CSS Reset & Base */
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body, html {
+            width: 100%;
+            height: 100%;
+            overflow: hidden;
+            touch-action: none;
+            -ms-touch-action: none;
+            font-family: 'Inter', sans-serif;
+        }
+
+        :root {
+            --transition-fast: 150ms;
+            --transition-normal: 300ms;
+            --ease-out: cubic-bezier(0.0, 0, 0.2, 1);
+            --space-xs: 8px;
+            --space-sm: 16px;
+            --space-md: 24px;
+            --space-lg: 32px;
+            --space-xl: 48px;
+
+            --bg-sky-top: #87CEEB;
+            --bg-sky-bottom: #E0F6FF;
+            --grid-beige: #F5DEB3;
+            --tile-cream: #FFF8DC;
+            --spawn-orange: #FF8C00;
+            --battle-green: #4A7C59;
+            --text-dark: #2C3E50;
+            --gold-color: #FFD700;
+            --medal-color: #E5E4E2;
+        }
+
+        #game-world {
+            position: relative;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(to bottom, var(--bg-sky-top), var(--bg-sky-bottom));
+            overflow: hidden;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .top-ui {
+            width: 100%;
+            height: 200px;
+            padding: var(--space-sm);
+            z-index: 10;
+            background: rgba(255, 255, 255, 0.2);
+            backdrop-filter: blur(4px);
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+        }
+
+        .currency-bar {
+            display: flex;
+            justify-content: space-around;
+            align-items: center;
+        }
+
+        .currency-item {
+            display: flex;
+            align-items: center;
+            gap: 4px;
+            background: rgba(255, 255, 255, 0.9);
+            padding: 6px 16px;
+            border-radius: 20px;
+            font-size: 20px;
+            font-weight: 700;
+            color: var(--text-dark);
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+
+        .stage-info {
+            text-align: center;
+            font-size: 22px;
+            font-weight: 800;
+            color: var(--text-dark);
+        }
+
+        .progress-bar {
+            width: 100%;
+            height: 16px;
+            background: rgba(255, 255, 255, 0.9);
+            border-radius: 8px;
+            overflow: hidden;
+            box-shadow: inset 0 2px 4px rgba(0,0,0,0.1);
+        }
+
+        .progress-fill {
+            height: 100%;
+            background: linear-gradient(to right, #4CAF50, var(--gold-color));
+            border-radius: 8px;
+            transition: width var(--transition-normal) var(--ease-out);
+        }
+
+        .rank-preview {
+            display: flex;
+            gap: 8px;
+            overflow-x: auto;
+            padding-bottom: 4px;
+            scrollbar-width: none;
+        }
+        .rank-preview::-webkit-scrollbar { display: none; }
+
+        .rank-preview-item {
+            flex-shrink: 0;
+            width: 60px;
+            height: 60px;
+            background: rgba(255, 255, 255, 0.8);
+            border-radius: 8px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 20px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+        .rank-preview-item.locked { opacity: 0.4; }
+
+        #view-container {
+            flex: 1;
+            position: relative;
+            width: 100%;
+            overflow: hidden;
+        }
+
+        .view {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            display: none;
+            padding: var(--space-sm);
+        }
+        .view.active { display: flex; flex-direction: column; }
+
+        /* Merge View */
+        .grid-container {
+            margin: auto;
+            width: 660px;
+            height: 660px;
+            background: var(--grid-beige);
+            border-radius: 16px;
+            padding: 12px;
+            box-shadow: 0 4px 16px rgba(0,0,0,0.2);
+        }
+
+        .merge-grid {
+            display: grid;
+            grid-template-columns: repeat(5, 1fr);
+            grid-template-rows: repeat(5, 1fr);
+            gap: 10px;
+            width: 100%;
+            height: 100%;
+        }
+
+        .grid-tile {
+            background: var(--tile-cream);
+            border: 2px dashed rgba(0,0,0,0.1);
+            border-radius: 12px;
+            position: relative;
+            cursor: pointer;
+            transition: all var(--transition-fast);
+        }
+        .grid-tile.occupied { background: white; border: 2px solid rgba(0,0,0,0.1); box-shadow: 0 2px 8px rgba(0,0,0,0.1); }
+        .grid-tile.dragging { opacity: 0.3; }
+        .grid-tile.highlight { border-color: var(--gold-color); box-shadow: 0 0 16px var(--gold-color); }
+
+        .unit {
+            width: 100%;
+            height: 100%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            position: relative;
+            padding: 6px;
+            overflow: hidden;
+        }
+        .unit-main {
+            display: flex;
+            width: 100%;
+            height: 100%;
+            align-items: center;
+            justify-content: space-between;
+            gap: 4px;
+        }
+        .unit-character {
+            flex: 1;
+            height: 100%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 2px;
+        }
+        .char-img {
+            width: 100%;
+            height: 100%;
+            object-fit: contain;
+            filter: drop-shadow(2px 4px 6px rgba(0,0,0,0.3));
+        }
+        .unit-info {
+            flex: 1.3;
+            height: 100%;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            gap: 2px;
+        }
+        .unit-insignia-container {
+            width: 100%;
+            flex: 2;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background: radial-gradient(circle, rgba(255,255,255,0.5) 0%, rgba(255,255,255,0) 70%);
+        }
+        .unit-insignia-svg {
+            width: 100%;
+            height: 100%;
+            filter: drop-shadow(0 2px 4px rgba(0,0,0,0.2));
+        }
+        .unit-name {
+            font-size: 9px;
+            font-weight: 800;
+            color: var(--text-dark);
+            text-transform: uppercase;
+            text-align: center;
+            line-height: 1.1;
+            width: 100%;
+            display: -webkit-box;
+            -webkit-line-clamp: 2;
+            -webkit-box-orient: vertical;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            padding: 0 2px;
+        }
+
+        .unit-rank-badge { display: none; } /* Hidden in new layout */
+
+        .spawn-area { height: 140px; display: flex; justify-content: center; align-items: center; }
+        .spawn-button {
+            width: 120px;
+            height: 120px;
+            background: linear-gradient(135deg, var(--spawn-orange), #FFA500);
+            border: none;
+            border-radius: 50%;
+            color: white;
+            font-size: 60px;
+            font-weight: 800;
+            cursor: pointer;
+            box-shadow: 0 8px 24px rgba(255, 140, 0, 0.4);
+            transition: all var(--transition-fast);
+        }
+        .spawn-button:active { transform: scale(0.9); }
+        .spawn-button.full { font-size: 16px; animation: shake 0.5s; }
+
+        /* Battle View */
+        #battle-view-content { flex: 1; display: flex; flex-direction: column; gap: var(--space-sm); }
+        #battle-canvas-container {
+            flex: 1;
+            width: 100%;
+            background: #A8D08D;
+            border-radius: 16px;
+            position: relative;
+            overflow: hidden;
+            box-shadow: inset 0 0 50px rgba(0,0,0,0.1);
+        }
+        #battle-canvas { width: 100%; height: 100%; display: block; }
+        .battle-ui { height: 100px; display: flex; justify-content: center; align-items: center; }
+        .battle-btn {
+            width: 280px;
+            height: 70px;
+            background: linear-gradient(135deg, var(--battle-green), #5A9C69);
+            border: none;
+            border-radius: 35px;
+            color: white;
+            font-size: 24px;
+            font-weight: 800;
+            cursor: pointer;
+            box-shadow: 0 4px 16px rgba(74, 124, 89, 0.4);
+        }
+
+        /* Upgrades & Missions */
+        .scroll-view { flex: 1; overflow-y: auto; display: flex; flex-direction: column; gap: var(--space-sm); padding-bottom: 40px; }
+        .upgrade-card, .mission-card {
+            background: white;
+            border-radius: 12px;
+            padding: var(--space-sm);
+            display: flex;
+            align-items: center;
+            gap: var(--space-sm);
+            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+        }
+        .card-icon { font-size: 40px; width: 70px; height: 70px; background: #f0f0f0; border-radius: 50%; display: flex; align-items: center; justify-content: center; }
+        .card-details { flex: 1; }
+        .card-title { font-weight: 800; font-size: 18px; color: var(--text-dark); }
+        .card-sub { font-size: 14px; color: #666; }
+        .card-price { font-weight: 800; color: var(--spawn-orange); font-size: 18px; }
+        .card-btn {
+            background: var(--battle-green);
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 8px;
+            font-weight: 800;
+            cursor: pointer;
+        }
+        .card-btn:disabled { background: #ccc; }
+
+        /* Navigation */
+        .bottom-nav {
+            width: 100%;
+            height: 120px;
+            background: white;
+            display: flex;
+            justify-content: space-around;
+            align-items: center;
+            border-top: 2px solid rgba(0,0,0,0.1);
+            z-index: 20;
+            padding-bottom: 20px;
+        }
+        .nav-item { display: flex; flex-direction: column; align-items: center; gap: 4px; cursor: pointer; opacity: 0.5; transition: 0.2s; }
+        .nav-item.active { opacity: 1; color: var(--battle-green); transform: translateY(-5px) scale(1.1); }
+        .nav-icon { font-size: 40px; }
+        .nav-label { font-size: 14px; font-weight: 800; }
+
+        /* Modals */
+        .modal-overlay { position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: rgba(0,0,0,0.8); display: none; align-items: center; justify-content: center; z-index: 100; }
+        .modal-overlay.active { display: flex; }
+        .modal { background: white; border-radius: 20px; padding: var(--space-lg); width: 90%; max-width: 600px; text-align: center; box-shadow: 0 10px 40px rgba(0,0,0,0.5); }
+        .modal-header { font-family: 'Fredoka', sans-serif; font-size: 36px; margin-bottom: 20px; color: var(--text-dark); }
+        .modal-btn { padding: 15px 30px; border: none; border-radius: 12px; font-size: 20px; font-weight: 700; cursor: pointer; margin: 10px; }
+        .modal-btn.primary { background: var(--battle-green); color: white; }
+        .modal-btn.secondary { background: #eee; color: #333; }
+
+        /* Utility */
+        .particle { position: fixed; pointer-events: none; z-index: 999; border-radius: 50%; }
+        .dragged-unit { position: fixed; pointer-events: none; z-index: 1000; width: 120px; height: 120px; filter: drop-shadow(0 8px 16px rgba(0,0,0,0.3)); }
+        @keyframes shake { 0%,100%{transform:translateX(0);} 25%{transform:translateX(-10px);} 75%{transform:translateX(10px);} }
+        @keyframes pop { 0%{transform:scale(1);} 50%{transform:scale(1.3);} 100%{transform:scale(1);} }
+
+        .settings-button { position: absolute; top: var(--space-sm); right: var(--space-sm); width: 50px; height: 50px; background: rgba(255,255,255,0.8); border: none; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 24px; z-index: 30; }
+        .edit-mode-indicator { position: absolute; top: 10px; left: 50%; transform: translateX(-50%); background: #ffc107; padding: 5px 20px; border-radius: 20px; font-weight: 800; z-index: 1000; display: none; }
+        /* Toast Notification */
+        #toast {
+            position: fixed;
+            bottom: 140px;
+            left: 50%;
+            transform: translateX(-50%);
+            background: rgba(0,0,0,0.8);
+            color: white;
+            padding: 10px 20px;
+            border-radius: 20px;
+            font-weight: 700;
+            z-index: 1000;
+            display: none;
+            pointer-events: none;
+        }
+
+        /* Leaderboard Styles */
+        .leaderboard-entry {
+            background: white;
+            border-radius: 12px;
+            padding: var(--space-sm);
+            display: flex;
+            align-items: center;
+            gap: var(--space-sm);
+            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+            margin-bottom: 10px;
+        }
+        .leaderboard-entry.current-user {
+            background: linear-gradient(135deg, #FFD700, #FFA500);
+            color: white;
+        }
+        .leaderboard-rank {
+            font-size: 28px;
+            font-weight: 800;
+            width: 50px;
+            text-align: center;
+            color: var(--gold-color);
+        }
+        .leaderboard-entry.current-user .leaderboard-rank {
+            color: white;
+        }
+        .leaderboard-avatar {
+            width: 50px;
+            height: 50px;
+            border-radius: 50%;
+            background: #f0f0f0;
+            object-fit: cover;
+        }
+        .leaderboard-info {
+            flex: 1;
+        }
+        .leaderboard-username {
+            font-weight: 800;
+            font-size: 18px;
+        }
+        .leaderboard-score {
+            font-size: 14px;
+            opacity: 0.8;
+        }
+        .leaderboard-wave {
+            font-size: 24px;
+            font-weight: 800;
+            color: var(--battle-green);
+        }
+        .leaderboard-entry.current-user .leaderboard-wave {
+            color: white;
+        }
+        .doctrine-grid {
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+            padding: 10px;
+        }
+        .doctrine-card {
+            background: white;
+            border-radius: 12px;
+            padding: var(--space-sm);
+            cursor: pointer;
+            transition: all 0.3s;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+        }
+        .doctrine-card:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(0,0,0,0.2);
+        }
+        .doctrine-card.active {
+            border: 3px solid var(--gold-color);
+            box-shadow: 0 0 20px rgba(255, 215, 0, 0.4);
+        }
+    </style>
+</head>
+<body>
+    <div id="game-world">
+        <div id="toast">Message</div>
+        <!-- Edit Mode Indicator -->
+        <div class="edit-mode-indicator" id="edit-indicator">EDIT MODE</div>
+
+        <!-- Top UI -->
+        <div class="top-ui">
+            <div class="currency-bar">
+                <div class="currency-item">🪙 <span id="gold-count">0</span></div>
+                <div class="currency-item">🏅 <span id="medal-count">0</span></div>
+            </div>
+            <div class="stage-info" id="stage-display">Stage 1: Training Camp</div>
+            <div class="progress-bar">
+                <div class="progress-fill" id="progress-fill" style="width: 0%"></div>
+            </div>
+            <div class="rank-preview" id="rank-preview"></div>
+        </div>
+
+        <!-- View Container -->
+        <div id="view-container">
+            <!-- Merge View -->
+            <div class="view active" id="view-merge">
+                <div class="grid-container">
+                    <div class="merge-grid" id="merge-grid"></div>
+                </div>
+                <div class="spawn-area">
+                    <button class="spawn-button" id="spawn-button">+</button>
+                </div>
+            </div>
+
+            <!-- Battle View -->
+            <div class="view" id="view-battle">
+                <div id="battle-view-content">
+                    <div id="battle-canvas-container">
+                        <canvas id="battle-canvas"></canvas>
+                    </div>
+                    <div class="battle-ui">
+                        <button class="battle-btn" id="battle-start-btn">DEPLOY & BATTLE</button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Upgrade View -->
+            <div class="view" id="view-upgrades">
+                <div class="modal-header">Upgrades</div>
+                <div class="scroll-view" id="upgrade-list"></div>
+            </div>
+
+            <!-- Mission View -->
+            <div class="view" id="view-missions">
+                <div class="modal-header">Missions</div>
+                <div class="scroll-view" id="mission-list"></div>
+            </div>
+
+            <div class="view" id="view-prestige">
+                <div class="modal-header">Veteran Command</div>
+                <div class="scroll-view" id="prestige-content">
+                    <div class="upgrade-card" style="flex-direction: column; text-align: center;">
+                        <div class="nav-icon">🎖️</div>
+                        <div class="card-title">Prestige Rank: <span id="prestige-lvl">0</span></div>
+                        <p id="prestige-desc" style="padding: 10px; font-size: 14px; color: #666;">Reach rank 14 (Colonel) to reset for permanent bonuses!</p>
+                        <button class="modal-btn primary" id="prestige-btn" disabled>RESET & PROMOTE</button>
+                    </div>
+                    <div id="prestige-upgrades" style="display: flex; flex-direction: column; gap: 10px; padding: 10px;"></div>
+                </div>
+            </div>
+
+            <div class="view" id="view-doctrine">
+                <div class="modal-header">Military Doctrine</div>
+                <div class="doctrine-grid" id="doctrine-list"></div>
+            </div>
+
+            <div class="view" id="view-leaderboard">
+                <div class="modal-header">Global Leaderboard</div>
+                <div style="text-align: center; padding: 10px;">
+                    <button class="modal-btn primary" id="refresh-leaderboard" style="margin: 0;">🔄 Refresh</button>
+                </div>
+                <div class="scroll-view" id="leaderboard-list">
+                    <div style="text-align: center; padding: 20px; color: #666;">Loading leaderboard...</div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Bottom Navigation -->
+        <div class="bottom-nav">
+            <div class="nav-item active" data-view="merge">
+                <div class="nav-icon">🧩</div>
+                <div class="nav-label">Merge</div>
+            </div>
+            <div class="nav-item" data-view="battle">
+                <div class="nav-icon">⚔️</div>
+                <div class="nav-label">Battle</div>
+            </div>
+            <div class="nav-item" data-view="upgrades">
+                <div class="nav-icon">🔝</div>
+                <div class="nav-label">Upgrades</div>
+            </div>
+            <div class="nav-item" data-view="prestige">
+                <div class="nav-icon">🎖️</div>
+                <div class="nav-label">Veteran</div>
+            </div>
+            <div class="nav-item" data-view="leaderboard">
+                <div class="nav-icon">🏆</div>
+                <div class="nav-label">Leaders</div>
+            </div>
+        </div>
+
+        <button class="settings-button" id="settings-button">⚙️</button>
+
+        <!-- Settings Modal -->
+        <div class="modal-overlay" id="settings-modal">
+            <div class="modal">
+                <div class="modal-header">Settings</div>
+                <button class="modal-btn primary" id="reset-button">Reset Progress</button>
+                <button class="modal-btn secondary" id="settings-close">Close</button>
+            </div>
+        </div>
+
+        <div class="modal-overlay" id="reset-confirm-modal">
+            <div class="modal">
+                <div class="modal-header">Wipe Progress?</div>
+                <p>Are you sure? This cannot be undone.</p>
+                <button class="modal-btn primary" id="reset-confirm-yes">Yes, Reset</button>
+                <button class="modal-btn secondary" id="reset-confirm-no">Cancel</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        async function run(mode) {
+            const gameWorld = document.getElementById('game-world');
+            const mergeGrid = document.getElementById('merge-grid');
+            const spawnButton = document.getElementById('spawn-button');
+            const battleStartBtn = document.getElementById('battle-start-btn');
+            const upgradeList = document.getElementById('upgrade-list');
+            const missionList = document.getElementById('mission-list');
+            const prestigeLvlDisplay = document.getElementById('prestige-lvl');
+            const prestigeBtn = document.getElementById('prestige-btn');
+            const prestigeUpgradesEl = document.getElementById('prestige-upgrades');
+            const doctrineListEl = document.getElementById('doctrine-list');
+            const goldCount = document.getElementById('gold-count');
+            const medalCount = document.getElementById('medal-count');
+            const progressFill = document.getElementById('progress-fill');
+            const rankPreview = document.getElementById('rank-preview');
+            const stageDisplay = document.getElementById('stage-display');
+            const battleCanvas = document.getElementById('battle-canvas');
+            const battleCtx = battleCanvas.getContext('2d');
+            const editIndicator = document.getElementById('edit-indicator');
+
+            // Audio & Assets
+            const assetCache = {};
+            const audioCache = {};
+            let audioContext = null;
+            let bgMusicSource = null;
+            let isMusicPlaying = false;
+
+            // Runtime State
+            let grid = new Array(25).fill(null);
+            let draggedFrom = null;
+            let draggedEl = null;
+            let isDragging = false;
+            let touchId = null;
+            let currentView = 'merge';
+
+            // Expanded Persistent State
+            let gameState = {
+                gold: 100,
+                medals: 0,
+                highestRank: 1,
+                currentStage: 0,
+                unlockedOfficers: false,
+                prestigeRank: 0,
+                prestigeCurrency: 0,
+                activeDoctrine: 'Army', // Army, AirForce, Navy, Marines, SpecialForces
+                upgrades: {
+                    spawnTraining: 0,
+                    combatTraining: 0,
+                    logistics: 0,
+                    medicalSupport: 0,
+                    tacticalCapacity: 0,
+                    officerAcademy: 0
+                },
+                prestigeUpgrades: {
+                    tactics: 0,
+                    logistics: 0,
+                    command: 0
+                },
+                missions: [
+                    { id: 1, type: 'merge', target: 10, current: 0, reward: 100, claimed: false, desc: 'Merge 10 units' },
+                    { id: 2, type: 'rank', target: 5, current: 1, reward: 200, claimed: false, desc: 'Reach Sergeant rank' },
+                    { id: 3, type: 'battle', target: 5, current: 0, reward: 500, claimed: false, desc: 'Win 5 battles' }
+                ]
+            };
+
+            const doctrines = {
+                'Army': { name: 'Army', desc: 'Balanced: +20% HP & Morale', bonus: { hp: 1.2, morale: 1.2 }, color: '#4CAF50' },
+                'AirForce': { name: 'Air Force', desc: 'Precision: +30% Crit & Recon Speed', bonus: { crit: 0.3, reconSpeed: 1.3 }, color: '#2196F3' },
+                'Navy': { name: 'Navy', desc: 'Fortified: +25% Defense & Healing', bonus: { def: 1.25, heal: 1.25 }, color: '#000080' },
+                'Marines': { name: 'Marines', desc: 'Aggressive: +25% Atk Speed', bonus: { atkSpd: 1.25 }, color: '#8B4513' },
+                'SpecialForces': { name: 'Special Forces', desc: 'Elite: +40% Attack for Officers', bonus: { officerAtk: 1.4 }, color: '#2C3E50' }
+            };
+
+            // Battle Objects
+            let battleUnits = [];
+            let battleEnemies = [];
+            let battleProjectiles = [];
+            let battleActive = false;
+            let lastBattleTime = 0;
+            let currentRound = 0;
+            let turnQueue = [];
+            let morale = 100;
+
+            function showToast(msg) {
+                const t = document.getElementById('toast');
+                t.textContent = msg;
+                t.style.display = 'block';
+                setTimeout(() => t.style.display = 'none', 2500);
+            }
+
+            function initAudio() {
+                if (!audioContext) audioContext = new (window.AudioContext || window.webkitAudioContext)();
+            }
+
+            async function preloadAssets() {
+                const rankIds = window.gameConfig.ranks.map(r => r.assetId);
+                const classIds = window.gameConfig.classes.map(c => c.assetId);
+                const audioIds = ['merge_sound', 'spawn_sound', 'battle_victory_sound', 'button_click_sound', 'lofi_background_music'];
+                const allImgs = [...new Set([...rankIds, ...classIds])];
+                const promises = allImgs.map(id => {
+                    return new Promise(resolve => {
+                        const info = lib.getAsset(id);
+                        if (!info) { resolve(); return; }
+                        const img = new Image();
+                        img.onload = () => { assetCache[id] = { img, info }; resolve(); };
+                        img.onerror = () => resolve();
+                        img.src = info.url;
+                    });
+                });
+                const aPromises = audioIds.map(id => {
+                    return new Promise(async resolve => {
+                        try {
+                            const info = lib.getAsset(id);
+                            if (info && audioContext) {
+                                const res = await fetch(info.url);
+                                const buf = await res.arrayBuffer();
+                                audioCache[id] = await audioContext.decodeAudioData(buf);
+                            }
+                        } catch(e) {}
+                        resolve();
+                    });
+                });
+                await Promise.all([...promises, ...aPromises]);
+            }
+
+            function playSound(id) {
+                if (!audioContext || !audioCache[id]) return;
+                const src = audioContext.createBufferSource();
+                src.buffer = audioCache[id];
+                src.connect(audioContext.destination);
+                src.start(0);
+            }
+
+            function startBackgroundMusic() {
+                if (!audioContext || !audioCache['lofi_background_music'] || isMusicPlaying) return;
+                
+                bgMusicSource = audioContext.createBufferSource();
+                bgMusicSource.buffer = audioCache['lofi_background_music'];
+                bgMusicSource.loop = true;
+                
+                const gainNode = audioContext.createGain();
+                gainNode.gain.value = 0.4; // 40% volume for background music
+                
+                bgMusicSource.connect(gainNode);
+                gainNode.connect(audioContext.destination);
+                
+                bgMusicSource.start(0);
+                isMusicPlaying = true;
+            }
+
+            async function saveGame() {
+                if (mode === 'edit') return;
+                try {
+                    // Comprehensive save of all game state
+                    const saveData = {
+                        gameState: {
+                            gold: gameState.gold,
+                            medals: gameState.medals,
+                            highestRank: gameState.highestRank,
+                            currentStage: gameState.currentStage,
+                            unlockedOfficers: gameState.unlockedOfficers,
+                            prestigeRank: gameState.prestigeRank,
+                            prestigeCurrency: gameState.prestigeCurrency,
+                            activeDoctrine: gameState.activeDoctrine,
+                            upgrades: { ...gameState.upgrades },
+                            prestigeUpgrades: { ...gameState.prestigeUpgrades },
+                            missions: gameState.missions.map(m => ({ ...m }))
+                        },
+                        grid: [...grid]
+                    };
+                    await lib.saveUserGameState(saveData);
+                } catch(e) {
+                    lib.log(`Save failed: ${e.message}`);
+                }
+            }
+
+            async function loadGame() {
+                if (mode === 'edit') return;
+                try {
+                    const res = await lib.getUserGameState();
+                    if (res && res.state) {
+                        // Restore all game state properties
+                        if (res.state.gameState) {
+                            gameState = {
+                                ...gameState,
+                                ...res.state.gameState,
+                                upgrades: { ...gameState.upgrades, ...(res.state.gameState.upgrades || {}) },
+                                prestigeUpgrades: { ...gameState.prestigeUpgrades, ...(res.state.gameState.prestigeUpgrades || {}) },
+                                missions: res.state.gameState.missions || gameState.missions
+                            };
+                        }
+                        if (res.state.grid) {
+                            grid = res.state.grid;
+                        }
+                        lib.log('Game loaded successfully');
+                    } else {
+                        lib.log('No saved game found, starting fresh');
+                    }
+                } catch(e) {
+                    lib.log(`Load failed: ${e.message}`);
+                }
+            }
+
+            async function resetGame() {
+                try { await lib.deleteUserGameState(); } catch(e) {}
+                location.reload();
+            }
+
+            async function submitToLeaderboard() {
+                if (mode === 'edit') return;
+                try {
+                    // Score calculation: Wave * 1000 + Prestige Rank * 100
+                    const score = (gameState.currentStage + 1) * 1000 + gameState.prestigeRank * 100;
+                    const response = await lib.addPlayerScoreToLeaderboard(score, 10);
+                    if (response.success) {
+                        lib.log(`Leaderboard updated! Your rank: ${response.userRank}`);
+                        // Only show toast if rank improved significantly
+                        if (response.userRank <= 10) {
+                            showToast(`🏆 Rank #${response.userRank} on Leaderboard!`);
+                        }
+                    }
+                } catch (error) {
+                    // Gracefully handle errors (e.g., guest users)
+                    lib.log(`Leaderboard submission failed: ${error.message}`);
+                }
+            }
+
+            async function loadLeaderboard() {
+                const leaderboardList = document.getElementById('leaderboard-list');
+                leaderboardList.innerHTML = '<div style="text-align: center; padding: 20px; color: #666;">Loading leaderboard...</div>';
+                
+                if (mode === 'edit') {
+                    leaderboardList.innerHTML = '<div style="text-align: center; padding: 20px; color: #666;">Leaderboard not available in Edit mode</div>';
+                    return;
+                }
+
+                try {
+                    const response = await lib.getTopNEntriesFromLeaderboard(10);
+                    
+                    if (!response.entries || response.entries.length === 0) {
+                        leaderboardList.innerHTML = '<div style="text-align: center; padding: 20px; color: #666;">No entries yet. Be the first!</div>';
+                        return;
+                    }
+
+                    leaderboardList.innerHTML = '';
+                    
+                    response.entries.forEach((entry, index) => {
+                        const wave = Math.floor(entry.score / 1000);
+                        const prestige = Math.floor((entry.score % 1000) / 100);
+                        const isCurrentUser = response.userRank === index + 1;
+                        
+                        const entryEl = document.createElement('div');
+                        entryEl.className = 'leaderboard-entry' + (isCurrentUser ? ' current-user' : '');
+                        entryEl.innerHTML = `
+                            <div class="leaderboard-rank">#${index + 1}</div>
+                            <img class="leaderboard-avatar" src="${entry.profilePicture || 'data:image/svg+xml,%3Csvg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22%3E%3Ccircle cx=%2250%22 cy=%2250%22 r=%2250%22 fill=%22%23ccc%22/%3E%3Ctext x=%2250%22 y=%2265%22 text-anchor=%22middle%22 font-size=%2250%22 fill=%22%23666%22%3E${entry.username.charAt(0).toUpperCase()}%3C/text%3E%3C/svg%3E'}" alt="${entry.username}">
+                            <div class="leaderboard-info">
+                                <div class="leaderboard-username">${entry.username}</div>
+                                <div class="leaderboard-score">Prestige: ${prestige} ⭐</div>
+                            </div>
+                            <div class="leaderboard-wave">Wave ${wave}</div>
+                        `;
+                        leaderboardList.appendChild(entryEl);
+                    });
+
+                    // Show user's rank if not in top 10
+                    if (response.userRank && response.userRank > 10) {
+                        const rankInfo = document.createElement('div');
+                        rankInfo.style.cssText = 'text-align: center; padding: 20px; background: rgba(255,215,0,0.1); border-radius: 12px; margin-top: 10px; font-weight: 700;';
+                        rankInfo.innerHTML = `Your Rank: #${response.userRank}`;
+                        leaderboardList.appendChild(rankInfo);
+                    }
+                } catch (error) {
+                    lib.log(`Failed to load leaderboard: ${error.message}`);
+                    leaderboardList.innerHTML = '<div style="text-align: center; padding: 20px; color: #666;">Unable to load leaderboard. Please try again later.</div>';
+                }
+            }
+
+            function initGame() {
+                updateUI();
+                renderGrid();
+                renderDoctrines();
+                renderPrestige();
+                resizeCanvas();
+            }
+
+            function updateUI() {
+                goldCount.textContent = Math.floor(gameState.gold);
+                medalCount.textContent = gameState.medals;
+                const stage = window.gameConfig.stages[gameState.currentStage % window.gameConfig.stages.length];
+                stageDisplay.textContent = `Wave ${gameState.currentStage + 1}: ${stage.name}`;
+                progressFill.style.width = `${(gameState.highestRank / 18) * 100}%`;
+                prestigeLvlDisplay.textContent = gameState.prestigeRank;
+                prestigeBtn.disabled = gameState.highestRank < 14;
+                renderRankPreview();
+            }
+
+            function renderRankPreview() {
+                rankPreview.innerHTML = '';
+                window.gameConfig.ranks.forEach((r, i) => {
+                    if (i >= 8 && !gameState.unlockedOfficers) return;
+                    const el = document.createElement('div');
+                    el.className = 'rank-preview-item' + (i < gameState.highestRank ? '' : ' locked');
+                    if (i < gameState.highestRank) {
+                        el.innerHTML = `<div style="width:100%;height:100%;display:flex;flex-direction:column;align-items:center;justify-content:center;padding:2px;">
+                            <div style="width:60%;height:60%;">${getInsigniaHTML(i+1)}</div>
+                            <div style="font-size:8px;font-weight:800;text-align:center;">${r.name}</div>
+                        </div>`;
+                    } else { el.textContent = '?'; }
+                    rankPreview.appendChild(el);
+                });
+            }
+
+            function renderGrid() {
+                mergeGrid.innerHTML = '';
+                grid.forEach((u, i) => {
+                    const tile = document.createElement('div');
+                    tile.className = 'grid-tile' + (u ? ' occupied' : ' empty');
+                    tile.dataset.index = i;
+                    if (u) tile.appendChild(createUnitEl(u));
+                    mergeGrid.appendChild(tile);
+                });
+            }
+
+            function getInsigniaHTML(rankNum) {
+                const colors = { gold: '#FFD700', silver: '#E5E4E2', bronze: '#CD7F32', dark: '#2C3E50' };
+                let svgContent = '';
+                const chevron = (y, color) => `<path d="M10,${y+20} L50,${y} L90,${y+20} L90,${y+35} L50,${y+15} L10,${y+35} Z" fill="${color}" />`;
+                const rocker = (y, color) => `<path d="M10,${y} Q50,${y+20} 90,${y} L90,${y+15} Q50,${y+35} 10,${y+15} Z" fill="${color}" />`;
+                const star = (x, y, size, color) => {
+                    const p = [];
+                    for(let i=0; i<5; i++) {
+                        const a = (i * 72 - 90) * Math.PI / 180;
+                        p.push(`${x + Math.cos(a)*size},${y + Math.sin(a)*size}`);
+                        const a2 = (i * 72 - 54) * Math.PI / 180;
+                        p.push(`${x + Math.cos(a2)*size/2.5},${y + Math.sin(a2)*size/2.5}`);
+                    }
+                    return `<polygon points="${p.join(' ')}" fill="${color}" />`;
+                };
+                if (rankNum <= 8) {
+                    const c = rankNum >= 4 ? colors.gold : colors.bronze;
+                    if (rankNum === 2) svgContent += chevron(35, c);
+                    if (rankNum === 3) { svgContent += chevron(30, c); svgContent += rocker(60, c); }
+                    if (rankNum >= 4) { svgContent += chevron(25, c); svgContent += chevron(45, c); }
+                    if (rankNum >= 5) svgContent += chevron(5, c);
+                    if (rankNum >= 6) svgContent += rocker(80, c);
+                    if (rankNum >= 7) svgContent += rocker(95, c);
+                    if (rankNum >= 8) svgContent += rocker(110, c);
+                } else if (rankNum <= 11) {
+                    const c = rankNum === 9 ? colors.gold : colors.silver;
+                    svgContent += `<rect x="40" y="20" width="20" height="60" rx="2" fill="${c}" />`;
+                    if (rankNum >= 10) svgContent += `<rect x="20" y="20" width="10" height="60" rx="2" fill="${c}" />`;
+                    if (rankNum >= 11) svgContent += `<rect x="70" y="20" width="10" height="60" rx="2" fill="${c}" />`;
+                } else if (rankNum <= 13) {
+                    const c = rankNum === 12 ? colors.gold : colors.silver;
+                    svgContent += `<path d="M50,20 Q70,20 80,40 Q85,60 50,80 Q15,60 20,40 Q30,20 50,20" fill="${c}" />`;
+                } else if (rankNum === 14) {
+                    svgContent += `<path d="M20,40 L30,30 L50,40 L70,30 L80,40 L70,70 L50,60 L30,70 Z" fill="${colors.silver}" />`;
+                } else {
+                    const numStars = rankNum - 14; const c = colors.silver;
+                    if (numStars === 1) svgContent += star(50, 50, 30, c);
+                    else if (numStars === 2) { svgContent += star(30, 50, 20, c); svgContent += star(70, 50, 20, c); }
+                    else if (numStars === 3) { svgContent += star(50, 30, 20, c); svgContent += star(25, 70, 20, c); svgContent += star(75, 70, 20, c); }
+                    else { svgContent += star(30, 30, 20, c); svgContent += star(70, 30, 20, c); svgContent += star(30, 70, 20, c); svgContent += star(70, 70, 20, c); }
+                }
+                return `<svg viewBox="0 0 100 120" class="unit-insignia-svg">${svgContent}</svg>`;
+            }
+
+            function createUnitEl(u) {
+                const rank = window.gameConfig.ranks[u.rank - 1];
+                const cls = window.gameConfig.classes[u.classIndex || 0];
+                const el = document.createElement('div');
+                el.className = 'unit';
+                el.innerHTML = `<div class="unit-main">
+                    <div class="unit-character"><img class="char-img" src="${assetCache[rank.assetId]?.info.url || ''}"></div>
+                    <div class="unit-info">
+                        <div class="unit-insignia-container">${getInsigniaHTML(u.rank)}</div>
+                        <div class="unit-name">${rank.name}</div>
+                    </div>
+                </div>`;
+                el.style.background = `linear-gradient(135deg, ${rank.color}, #ffffffaa)`;
+                el.style.border = `3px solid ${cls.color}`;
+                el.style.borderRadius = '12px';
+                return el;
+            }
+
+            function spawnUnit() {
+                initAudio();
+                startBackgroundMusic();
+                const empties = grid.map((u, i) => u === null ? i : null).filter(i => i !== null);
+                if (empties.length === 0) return (spawnButton.classList.add('full'), spawnButton.textContent = 'FULL!', setTimeout(() => {spawnButton.classList.remove('full'); spawnButton.textContent = '+';}, 1000));
+                const idx = empties[Math.floor(Math.random() * empties.length)];
+                let rank = 1;
+                if (Math.random() < 0.1 + (gameState.upgrades.spawnTraining * 0.05)) rank = Math.min(gameState.highestRank, 1 + Math.floor(gameState.upgrades.spawnTraining / 2));
+                grid[idx] = { rank, classIndex: Math.floor(Math.random() * window.gameConfig.classes.length) };
+                playSound('spawn_sound'); renderGrid(); saveGame();
+            }
+
+            function mergeUnits(from, to) {
+                if (!grid[from] || !grid[to] || grid[from].rank !== grid[to].rank) return;
+                const r = grid[to].rank;
+                if (r >= 18) return;
+                if (r === 8 && !gameState.unlockedOfficers) {
+                    if (gameState.currentStage < 9) return showToast("Clear Wave 10 to unlock Officers!");
+                    if (gameState.medals < 50) return showToast("Need 50 Medals to promote to Officer!");
+                    gameState.medals -= 50;
+                    gameState.unlockedOfficers = true; showToast("OFFICER PROMOTIONS UNLOCKED!");
+                }
+                grid[to].rank++; grid[from] = null;
+                if (grid[to].rank > gameState.highestRank) {
+                    gameState.highestRank = grid[to].rank;
+                    showPromotionEffect(grid[to].rank);
+                }
+                const gain = grid[to].rank * 15 * (1 + gameState.upgrades.logistics * 0.2 + (gameState.prestigeUpgrades.logistics * 0.5));
+                gameState.gold += gain;
+                trackMission('merge', 1); trackMission('rank', grid[to].rank);
+                playSound('merge_sound'); animateMerge(to); renderGrid(); updateUI(); saveGame();
+                showFloatingText(`+🪙${Math.floor(gain)}`, mergeGrid.children[to]);
+            }
+
+            function showFloatingText(text, parent) {
+                const ft = document.createElement('div');
+                ft.textContent = text;
+                ft.style.position = 'absolute'; ft.style.top = '50%'; ft.style.left = '50%';
+                ft.style.transform = 'translate(-50%, -50%)'; ft.style.color = '#FFD700';
+                ft.style.fontWeight = 'bold'; ft.style.fontSize = '24px'; ft.style.pointerEvents = 'none';
+                ft.style.zIndex = '1000'; ft.style.transition = 'all 1s ease-out';
+                parent.appendChild(ft);
+                setTimeout(() => { ft.style.top = '-20%'; ft.style.opacity = '0'; }, 10);
+                setTimeout(() => ft.remove(), 1000);
+            }
+
+            function animateMerge(i) {
+                const tile = mergeGrid.children[i];
+                tile.style.animation = 'pop 0.3s';
+                setTimeout(() => tile.style.animation = '', 300);
+            }
+
+            // Battle Logic (Expanded)
+            function resizeCanvas() {
+                const rect = document.getElementById('battle-canvas-container').getBoundingClientRect();
+                battleCanvas.width = rect.width; battleCanvas.height = rect.height;
+            }
+
+            let battleState = 'PREP'; // PREP or FIGHTING
+
+            function startBattle() {
+                if (battleActive) return;
+                const deployed = grid.filter(u => u !== null);
+                const cap = 4 + gameState.upgrades.tacticalCapacity;
+                const selected = deployed.slice(0, cap);
+                if (selected.length === 0) return showToast("No units to deploy!");
+
+                battleActive = true;
+                battleState = 'PREP';
+                battleStartBtn.textContent = 'ENGAGE ENEMY';
+                battleStartBtn.disabled = false;
+
+                const docBonus = doctrines[gameState.activeDoctrine].bonus;
+                
+                battleUnits = selected.map((u, i) => {
+                    const rI = window.gameConfig.ranks[u.rank-1];
+                    const cI = window.gameConfig.classes[u.classIndex];
+                    let hp = u.rank * 100 * cI.multiplier.hp * (1 + gameState.upgrades.medicalSupport * 0.1);
+                    let atk = u.rank * 20 * (1 + gameState.prestigeUpgrades.tactics * 0.5) * cI.multiplier.attack * (1 + gameState.upgrades.combatTraining * 0.1);
+                    if (gameState.activeDoctrine === 'Army') { hp *= docBonus.hp; }
+                    if (gameState.activeDoctrine === 'SpecialForces' && u.rank >= 9) { atk *= docBonus.officerAtk; }
+                    
+                    return {
+                        ...u, team: 'p', x: 50 + (i % 2) * 80, y: 100 + i * 80,
+                        hp, maxHp: hp, atk, speed: 10 * cI.multiplier.speed * (gameState.activeDoctrine === 'AirForce' && cI.role === 'harasser' ? docBonus.reconSpeed : 1),
+                        role: cI.role, color: cI.color, assetId: rI.assetId, lastAtk: 0,
+                        isDragging: false,
+                        visual: { bob: Math.random() * Math.PI * 2, flash: 0, scale: 1, tilt: 0 }
+                    };
+                });
+
+                const wave = gameState.currentStage;
+                const isBoss = (wave + 1) % 5 === 0;
+                const enemyCount = isBoss ? 1 : 2 + Math.floor(wave / 2);
+                battleEnemies = Array.from({length: enemyCount}, (_, i) => {
+                    const hp = (isBoss ? 1500 : 120) * (wave + 1);
+                    const rankForVisual = Math.min(18, 1 + Math.floor(wave / 2));
+                    const rI = window.gameConfig.ranks[rankForVisual - 1];
+                    return {
+                        team: 'e', x: battleCanvas.width - 100, y: 100 + i * 100,
+                        hp, maxHp: hp, atk: (isBoss ? 60 : 20) * (1 + wave * 0.2), speed: 8, color: '#ff4444', isBoss,
+                        assetId: rI.assetId,
+                        visual: { bob: Math.random() * Math.PI * 2, flash: 0, scale: 1, tilt: 0 }
+                    };
+                });
+
+                battleProjectiles = [];
+                lastBattleTime = performance.now();
+                requestAnimationFrame(battleLoop);
+            }
+
+            function battleLoop(t) {
+                if (!battleActive) return;
+                const dt = (t - lastBattleTime) / 1000;
+                lastBattleTime = t;
+                if (battleState === 'FIGHTING') updateBattle(dt);
+                drawBattle();
+                if (battleState === 'FIGHTING' && (battleUnits.length === 0 || battleEnemies.length === 0 || morale <= 0)) {
+                    endBattle(battleEnemies.length === 0 && morale > 0);
+                } else {
+                    requestAnimationFrame(battleLoop);
+                }
+            }
+
+            battleStartBtn.onclick = () => {
+                initAudio();
+                startBackgroundMusic();
+                if (!battleActive) {
+                    startBattle();
+                } else if (battleState === 'PREP') {
+                    applyFormationBonuses();
+                    battleState = 'FIGHTING';
+                    battleStartBtn.disabled = true;
+                    battleStartBtn.textContent = 'IN COMBAT...';
+                    morale = 100 + (gameState.activeDoctrine === 'Army' ? 20 : 0);
+                }
+            };
+
+            function applyFormationBonuses() {
+                // Front: x < 150, Middle: 150-250, Back: > 250
+                let frontlineCount = 0;
+                battleUnits.forEach(u => {
+                    if (u.x < 150) frontlineCount++;
+                });
+
+                battleUnits.forEach(u => {
+                    if (u.x < 150) { // Frontline bonus
+                        u.maxHp *= 1.2; u.hp = u.maxHp;
+                    }
+                    if (u.x > 250) { // Backline bonus
+                        if (u.role === 'dps') u.atk *= 1.3;
+                        if (u.role === 'aoe') u.atk *= 1.2;
+                    }
+                    if (frontlineCount >= 3) { // Full frontline bonus
+                        u.maxHp *= 1.1; u.hp = u.maxHp;
+                    }
+                });
+            }
+
+            // Canvas drag for preparation
+            battleCanvas.onmousedown = e => {
+                if (battleState !== 'PREP') return;
+                const rect = battleCanvas.getBoundingClientRect();
+                const x = e.clientX - rect.left; const y = e.clientY - rect.top;
+                battleUnits.forEach(u => {
+                    if (Math.hypot(u.x - x, u.y - y) < 40) u.isDragging = true;
+                });
+            };
+            window.addEventListener('mousemove', e => {
+                const rect = battleCanvas.getBoundingClientRect();
+                const x = e.clientX - rect.left; const y = e.clientY - rect.top;
+                battleUnits.forEach(u => {
+                    if (u.isDragging) {
+                        u.x = Math.max(20, Math.min(battleCanvas.width * 0.4, x));
+                        u.y = Math.max(20, Math.min(battleCanvas.height - 20, y));
+                    }
+                });
+            });
+            window.addEventListener('mouseup', () => {
+                battleUnits.forEach(u => u.isDragging = false);
+            });
+
+            function drawBattle() {
+                const stage = window.gameConfig.stages[gameState.currentStage % window.gameConfig.stages.length];
+                battleCanvas.style.background = stage.background || '#A8D08D';
+                battleCtx.clearRect(0,0,battleCanvas.width, battleCanvas.height);
+                
+                // Draw Grid
+                battleCtx.strokeStyle = 'rgba(255,255,255,0.1)';
+                for(let i=0; i<4; i++) {
+                    battleCtx.beginPath(); battleCtx.moveTo(i * (battleCanvas.width/4), 0); battleCtx.lineTo(i * (battleCanvas.width/4), battleCanvas.height); battleCtx.stroke();
+                    battleCtx.beginPath(); battleCtx.moveTo(0, i * (battleCanvas.height/4)); battleCtx.lineTo(battleCanvas.width, i * (battleCanvas.height/4)); battleCtx.stroke();
+                }
+
+                [...battleUnits, ...battleEnemies].forEach(u => {
+                    // Shadow
+                    battleCtx.fillStyle = 'rgba(0,0,0,0.2)';
+                    battleCtx.beginPath();
+                    battleCtx.ellipse(u.x, u.y + 20, 25, 10, 0, 0, Math.PI * 2);
+                    battleCtx.fill();
+
+                    // Aura for Officers/Generals
+                    if (u.team === 'p' && u.rank >= 5) {
+                        battleCtx.beginPath(); battleCtx.arc(u.x, u.y, 80, 0, Math.PI*2);
+                        battleCtx.fillStyle = 'rgba(255,255,255,0.05)'; battleCtx.fill();
+                        battleCtx.strokeStyle = 'rgba(255,255,255,0.2)'; battleCtx.stroke();
+                    }
+
+                    // Character Drawing
+                    battleCtx.save();
+                    battleCtx.translate(u.x, u.y);
+                    
+                    // Bobbing and Tilt
+                    const bobY = Math.sin(u.visual.bob) * 5;
+                    battleCtx.translate(0, bobY);
+                    battleCtx.rotate(u.visual.tilt);
+                    battleCtx.scale(u.visual.scale, u.visual.scale);
+                    
+                    // Flip enemy
+                    if (u.team === 'e') battleCtx.scale(-1, 1);
+
+                    // Flash on hit
+                    if (u.visual.flash > 0) {
+                        battleCtx.filter = `brightness(${1 + u.visual.flash * 5}) saturate(${1 - u.visual.flash})`;
+                    }
+
+                    if (u.assetId && assetCache[u.assetId]) {
+                        const size = u.isBoss ? 100 : 70;
+                        battleCtx.drawImage(assetCache[u.assetId].img, -size/2, -size/2, size, size);
+                    } else {
+                        // Fallback
+                        battleCtx.fillStyle = u.color;
+                        battleCtx.beginPath(); battleCtx.arc(0, 0, u.isBoss ? 40 : 25, 0, Math.PI*2); battleCtx.fill();
+                    }
+
+                    battleCtx.restore();
+
+                    // UI - HP Bar
+                    battleCtx.fillStyle = '#444'; battleCtx.fillRect(u.x-30, u.y-60, 60, 8);
+                    battleCtx.fillStyle = u.team === 'p' ? '#4CAF50' : '#ff4444'; 
+                    battleCtx.fillRect(u.x-30, u.y-60, 60 * (u.hp/u.maxHp), 8);
+
+                    if (u.team === 'p') {
+                        battleCtx.fillStyle = 'white'; battleCtx.font = 'bold 12px Inter'; battleCtx.textAlign = 'center';
+                        battleCtx.fillText(u.rank, u.x, u.y - 70);
+                    }
+                });
+
+                battleProjectiles.forEach(p => {
+                    battleCtx.fillStyle = p.color; battleCtx.beginPath(); battleCtx.arc(p.x, p.y, 6, 0, Math.PI*2); battleCtx.fill();
+                    // Tail
+                    battleCtx.strokeStyle = p.color;
+                    battleCtx.lineWidth = 4;
+                    battleCtx.beginPath();
+                    battleCtx.moveTo(p.x, p.y);
+                    const angle = Math.atan2(p.target.y - p.y, p.target.x - p.x);
+                    battleCtx.lineTo(p.x - Math.cos(angle) * 20, p.y - Math.sin(angle) * 20);
+                    battleCtx.stroke();
+                });
+
+                battleFloatingTexts.forEach(ft => {
+                    battleCtx.fillStyle = ft.color || 'white';
+                    battleCtx.font = 'bold 24px Inter';
+                    battleCtx.textAlign = 'center';
+                    battleCtx.globalAlpha = ft.life;
+                    battleCtx.fillText(ft.text, ft.x, ft.y);
+                    battleCtx.globalAlpha = 1;
+                });
+
+                // Morale Bar
+                battleCtx.fillStyle = 'rgba(0,0,0,0.5)'; battleCtx.fillRect(20, 20, battleCanvas.width - 40, 24);
+                battleCtx.fillStyle = '#FFD700'; battleCtx.fillRect(22, 22, (battleCanvas.width - 44) * (morale/100), 20);
+                battleCtx.fillStyle = 'white'; battleCtx.font = 'bold 16px Inter'; battleCtx.textAlign = 'center';
+                battleCtx.fillText(`ARMY MORALE: ${Math.floor(morale)}%`, battleCanvas.width/2, 38);
+
+                if (battleState === 'PREP') {
+                    battleCtx.fillStyle = 'rgba(0,0,0,0.5)';
+                    battleCtx.fillRect(0, battleCanvas.height - 100, battleCanvas.width, 100);
+                    battleCtx.fillStyle = 'white';
+                    battleCtx.font = 'bold 18px Inter';
+                    battleCtx.textAlign = 'center';
+                    battleCtx.fillText("DRAG UNITS TO POSITION THEM", battleCanvas.width/2, battleCanvas.height - 60);
+                    battleCtx.font = '14px Inter';
+                    battleCtx.fillText("Left: Frontline (+HP) | Right: Backline (+ATK)", battleCanvas.width/2, battleCanvas.height - 30);
+                }
+            }
+
+            let battleFloatingTexts = [];
+
+            function updateBattle(dt) {
+                [...battleUnits, ...battleEnemies].forEach(u => {
+                    // Update visual state
+                    u.visual.bob += dt * 10;
+                    u.visual.flash = Math.max(0, u.visual.flash - dt * 5);
+                    u.visual.scale = 1 + (u.visual.scale - 1) * 0.9;
+                    u.visual.tilt *= 0.9;
+
+                    const targets = u.team === 'p' ? battleEnemies : battleUnits;
+                    const allies = u.team === 'p' ? battleUnits : battleEnemies;
+                    if (targets.length === 0) return;
+
+                    if (u.role === 'support' && performance.now() - u.lastAtk > 2000) {
+                        const lowAlly = allies.reduce((min, cur) => cur.hp < min.hp ? cur : min, allies[0]);
+                        if (lowAlly && lowAlly.hp < lowAlly.maxHp) {
+                            lowAlly.hp = Math.min(lowAlly.maxHp, lowAlly.hp + (u.atk * 2));
+                            battleFloatingTexts.push({ x: lowAlly.x, y: lowAlly.y, text: `+HP`, life: 1, color: '#4CAF50' });
+                            u.lastAtk = performance.now();
+                            u.visual.scale = 1.2;
+                            return; 
+                        }
+                    }
+
+                    let target = targets[0];
+                    if (u.role === 'harasser') target = targets[targets.length - 1]; 
+                    if (u.role === 'dps') target = targets.reduce((min, cur) => cur.hp < min.hp ? cur : min, targets[0]);
+
+                    const dist = Math.hypot(target.x - u.x, target.y - u.y);
+                    const range = u.role === 'dps' ? 350 : (u.role === 'aoe' ? 250 : 100);
+
+                    if (dist > range) {
+                        const angle = Math.atan2(target.y - u.y, target.x - u.x);
+                        u.x += Math.cos(angle) * u.speed * dt * 25;
+                        u.y += Math.sin(angle) * u.speed * dt * 25;
+                        u.visual.tilt = Math.sin(performance.now() / 100) * 0.2;
+                    } else if (performance.now() - u.lastAtk > 1000 / (u.team === 'p' && gameState.activeDoctrine === 'Marines' ? 1.25 : 1)) {
+                        u.lastAtk = performance.now();
+                        u.visual.scale = 1.3;
+                        let finalDmg = u.atk;
+                        if (u.team === 'p') {
+                            if (u.role === 'frontline' && target.role === 'harasser') finalDmg *= 1.5;
+                            if (u.role === 'harasser' && target.role === 'tank') finalDmg *= 1.5;
+                            if (u.role === 'tank' && target.role === 'frontline') finalDmg *= 1.5;
+                        }
+                        battleProjectiles.push({ x: u.x, y: u.y, target, dmg: finalDmg, speed: 600, color: u.color, isSplash: u.role === 'aoe' });
+                    }
+                });
+
+                for (let i = battleProjectiles.length - 1; i >= 0; i--) {
+                    const p = battleProjectiles[i];
+                    const dist = Math.hypot(p.target.x - p.x, p.target.y - p.y);
+                    if (dist < 20) {
+                        if (p.isSplash) {
+                            const targets = p.target.team === 'p' ? battleUnits : battleEnemies;
+                            targets.forEach(t => { 
+                                if (Math.hypot(t.x - p.x, t.y - p.y) < 80) {
+                                    t.hp -= p.dmg;
+                                    t.visual.flash = 1;
+                                    t.visual.tilt = (Math.random() - 0.5) * 0.5;
+                                    battleFloatingTexts.push({ x: t.x, y: t.y, text: `-${Math.floor(p.dmg)}`, life: 1, color: '#ff4444' });
+                                }
+                            });
+                        } else {
+                            p.target.hp -= p.dmg;
+                            p.target.visual.flash = 1;
+                            p.target.visual.tilt = (Math.random() - 0.5) * 0.5;
+                            battleFloatingTexts.push({ x: p.target.x, y: p.target.y, text: `-${Math.floor(p.dmg)}`, life: 1, color: '#ff4444' });
+                        }
+                        battleProjectiles.splice(i, 1);
+                    } else {
+                        const angle = Math.atan2(p.target.y - p.y, p.target.x - p.x);
+                        p.x += Math.cos(angle) * p.speed * dt; p.y += Math.sin(angle) * p.speed * dt;
+                    }
+                }
+                
+                for (let i = battleFloatingTexts.length - 1; i >= 0; i--) {
+                    battleFloatingTexts[i].life -= dt;
+                    battleFloatingTexts[i].y -= 40 * dt;
+                    if (battleFloatingTexts[i].life <= 0) battleFloatingTexts.splice(i, 1);
+                }
+
+                const deadUnits = battleUnits.filter(u => u.hp <= 0);
+                if (deadUnits.length > 0) morale -= deadUnits.length * 10;
+                battleUnits = battleUnits.filter(u => u.hp > 0);
+                battleEnemies = battleEnemies.filter(e => e.hp > 0);
+            }
+
+            function endBattle(win) {
+                battleActive = false; battleState = 'PREP'; 
+                battleStartBtn.disabled = false; battleStartBtn.textContent = 'DEPLOY & BATTLE';
+                if (win) {
+                    const g = (gameState.currentStage + 1) * 100;
+                    gameState.gold += g; gameState.medals += (gameState.currentStage + 1) % 5 === 0 ? 5 : 1;
+                    gameState.currentStage++; playSound('battle_victory_sound');
+                    showToast(`VICTORY! +🪙${g}`); trackMission('battle', 1);
+                    // Submit to leaderboard after victory
+                    submitToLeaderboard();
+                } else showToast("DEFEAT! Regroup and upgrade.");
+                updateUI(); saveGame();
+            }
+
+            // Upgrades & Missions
+            function renderUpgrades() {
+                upgradeList.innerHTML = '';
+                window.gameConfig.upgrades.forEach(u => {
+                    const lvl = gameState.upgrades[u.key] || 0;
+                    const cost = Math.floor(u.baseCost * Math.pow(u.growth, lvl));
+                    const card = document.createElement('div');
+                    card.className = 'upgrade-card';
+                    card.innerHTML = `<div class="card-icon">⭐</div>
+                        <div class="card-details">
+                            <div class="card-title">${u.name}</div>
+                            <div class="card-sub">Level ${lvl}</div>
+                            <div class="card-price">🪙 ${cost}</div>
+                        </div>
+                        <button class="card-btn" ${gameState.gold < cost ? 'disabled' : ''}>UPGRADE</button>`;
+                    card.querySelector('button').onclick = () => {
+                        if (gameState.gold >= cost) {
+                            gameState.gold -= cost; gameState.upgrades[u.key]++;
+                            playSound('button_click_sound'); renderUpgrades(); updateUI(); saveGame();
+                        }
+                    };
+                    upgradeList.appendChild(card);
+                });
+            }
+
+            function renderMissions() {
+                missionList.innerHTML = '';
+                gameState.missions.forEach(m => {
+                    const card = document.createElement('div');
+                    card.className = 'mission-card';
+                    const prog = Math.min(100, (m.current / m.target) * 100);
+                    card.innerHTML = `<div class="card-icon">📜</div>
+                        <div class="card-details">
+                            <div class="card-title">${m.desc}</div>
+                            <div class="progress-bar" style="margin:5px 0"><div class="progress-fill" style="width:${prog}%"></div></div>
+                            <div class="card-sub">${m.current}/${m.target}</div>
+                        </div>
+                        <button class="card-btn" ${m.current < m.target || m.claimed ? 'disabled' : ''}>${m.claimed ? 'CLAIMED' : 'CLAIM'}</button>`;
+                    card.querySelector('button').onclick = () => {
+                        if (m.current >= m.target && !m.claimed) {
+                            gameState.gold += m.reward; m.claimed = true;
+                            playSound('button_click_sound'); renderMissions(); updateUI(); saveGame();
+                        }
+                    };
+                    missionList.appendChild(card);
+                });
+            }
+
+            function showPromotionEffect(rankNum) {
+                const rank = window.gameConfig.ranks[rankNum - 1];
+                const overlay = document.createElement('div');
+                overlay.style.position = 'fixed'; overlay.style.top = '0'; overlay.style.left = '0';
+                overlay.style.width = '100%'; overlay.style.height = '100%';
+                overlay.style.background = 'rgba(0,0,0,0.85)'; overlay.style.zIndex = '2000';
+                overlay.style.display = 'flex'; overlay.style.flexDirection = 'column';
+                overlay.style.alignItems = 'center'; overlay.style.justifyContent = 'center';
+                overlay.style.animation = 'fadeIn 0.5s';
+                
+                overlay.innerHTML = `
+                    <div style="font-size: 32px; color: gold; font-weight: 800; margin-bottom: 20px;">NEW PROMOTION!</div>
+                    <div style="width: 200px; height: 240px; background: white; border-radius: 20px; padding: 20px; display: flex; flex-direction: column; align-items: center; justify-content: center; border: 5px solid gold;">
+                        <div style="width: 100px; height: 120px;">${getInsigniaHTML(rankNum)}</div>
+                        <div style="font-size: 24px; font-weight: 800; margin-top: 10px;">${rank.name}</div>
+                    </div>
+                    <div style="color: white; margin-top: 20px; font-size: 18px;">SALUTE! 🎖️</div>
+                `;
+                document.body.appendChild(overlay);
+                setTimeout(() => {
+                    overlay.style.opacity = '0'; overlay.style.transition = '0.5s';
+                    setTimeout(() => overlay.remove(), 500);
+                }, 3000);
+            }
+
+            function trackMission(type, val) {
+                let allClaimed = true;
+                gameState.missions.forEach(m => {
+                    if (m.type === type && !m.claimed) {
+                        if (type === 'rank') { if (val > m.current) m.current = val; }
+                        else m.current += val;
+                    }
+                    if (!m.claimed) allClaimed = false;
+                });
+                
+                if (allClaimed) {
+                    // Generate new missions
+                    const wave = gameState.currentStage + 1;
+                    gameState.missions = [
+                        { id: Date.now(), type: 'merge', target: 20 + wave, current: 0, reward: 200 * wave, claimed: false, desc: `Merge ${20+wave} units` },
+                        { id: Date.now()+1, type: 'rank', target: Math.min(18, gameState.highestRank + 1), current: gameState.highestRank, reward: 500 * wave, claimed: false, desc: `Reach Rank ${Math.min(18, gameState.highestRank + 1)}` },
+                        { id: Date.now()+2, type: 'battle', target: 10, current: 0, reward: 1000 * wave, claimed: false, desc: `Win 10 battles` }
+                    ];
+                }
+            }
+
+            // Prestige & Doctrine
+            function renderPrestige() {
+                prestigeUpgradesEl.innerHTML = '';
+                const pUpgrades = [
+                    { key: 'tactics', name: 'Elite Tactics', desc: '+50% Attack Damage', icon: '⚔️' },
+                    { key: 'logistics', name: 'Global Supply', desc: '+50% Gold from Merges', icon: '📦' },
+                    { key: 'command', name: 'Aura Mastery', desc: '+20% Command Radius', icon: '👑' }
+                ];
+                pUpgrades.forEach(u => {
+                    const lvl = gameState.prestigeUpgrades[u.key] || 0;
+                    const cost = (lvl + 1) * 2;
+                    const card = document.createElement('div');
+                    card.className = 'upgrade-card';
+                    card.innerHTML = `<div class="card-icon">${u.icon}</div>
+                        <div class="card-details">
+                            <div class="card-title">${u.name}</div>
+                            <div class="card-sub">Lvl ${lvl} | ${u.desc}</div>
+                            <div class="card-price">⭐ ${cost} Points</div>
+                        </div>
+                        <button class="card-btn" ${gameState.prestigeCurrency < cost ? 'disabled' : ''}>BUY</button>`;
+                    card.querySelector('button').onclick = () => {
+                        if (gameState.prestigeCurrency >= cost) {
+                            gameState.prestigeCurrency -= cost; gameState.prestigeUpgrades[u.key]++;
+                            playSound('button_click_sound'); renderPrestige(); saveGame();
+                        }
+                    };
+                    prestigeUpgradesEl.appendChild(card);
+                });
+            }
+
+            function renderDoctrines() {
+                doctrineListEl.innerHTML = '';
+                Object.values(doctrines).forEach(d => {
+                    const card = document.createElement('div');
+                    card.className = 'doctrine-card' + (gameState.activeDoctrine === d.name.replace(' ', '') ? ' active' : '');
+                    card.innerHTML = `<h3 style="color:${d.color}">${d.name}</h3><p>${d.desc}</p>`;
+                    card.onclick = () => {
+                        gameState.activeDoctrine = d.name.replace(' ', '');
+                        renderDoctrines(); showToast(`Doctrine: ${d.name} Activated!`); saveGame();
+                    };
+                    doctrineListEl.appendChild(card);
+                });
+            }
+
+            prestigeBtn.onclick = () => {
+                if (gameState.highestRank < 14) return;
+                const points = Math.floor(gameState.highestRank / 2);
+                gameState.prestigeRank++;
+                gameState.prestigeCurrency += points;
+                gameState.gold = 100; gameState.medals = 0; gameState.highestRank = 1;
+                gameState.currentStage = 0; gameState.unlockedOfficers = false;
+                grid = new Array(25).fill(null);
+                Object.keys(gameState.upgrades).forEach(k => gameState.upgrades[k] = 0);
+                showToast(`VETERAN PROMOTION! +${points} Stars`);
+                updateUI(); renderGrid(); renderPrestige(); saveGame();
+                // Submit to leaderboard after prestige
+                submitToLeaderboard();
+            };
+
+            // Dragging
+            function startDrag(idx, x, y, id) {
+                if (mode !== 'play') return;
+                isDragging = true; touchId = id; draggedFrom = idx;
+                draggedEl = document.createElement('div');
+                draggedEl.className = 'dragged-unit';
+                draggedEl.appendChild(createUnitEl(grid[idx]));
+                draggedEl.style.left = (x - 60) + 'px'; draggedEl.style.top = (y - 60) + 'px';
+                document.body.appendChild(draggedEl);
+                mergeGrid.children[idx].classList.add('dragging');
+            }
+            function moveDrag(x, y) { if (isDragging) { draggedEl.style.left = (x - 60) + 'px'; draggedEl.style.top = (y - 60) + 'px'; } }
+            function endDrag(x, y) {
+                if (!isDragging) return; isDragging = false; touchId = null;
+                const el = document.elementFromPoint(x, y);
+                const tile = el?.closest('.grid-tile');
+                const to = tile ? parseInt(tile.dataset.index) : null;
+                if (to !== null && to !== draggedFrom) {
+                    if (grid[to] === null) { grid[to] = grid[draggedFrom]; grid[draggedFrom] = null; renderGrid(); saveGame(); }
+                    else if (grid[to].rank === grid[draggedFrom].rank) mergeUnits(draggedFrom, to);
+                }
+                draggedEl.remove(); if (mergeGrid.children[draggedFrom]) mergeGrid.children[draggedFrom].classList.remove('dragging');
+            }
+
+            // Navigation logic moved here
+            document.querySelectorAll('.nav-item').forEach(nav => {
+                nav.onclick = () => {
+                    initAudio();
+                    startBackgroundMusic();
+                    const v = nav.dataset.view;
+                    document.querySelectorAll('.view, .nav-item').forEach(el => el.classList.remove('active'));
+                    nav.classList.add('active'); document.getElementById(`view-${v}`).classList.add('active');
+                    currentView = v; playSound('button_click_sound');
+                    if (v === 'upgrades') renderUpgrades();
+                    if (v === 'missions') renderMissions();
+                    if (v === 'prestige') renderPrestige();
+                    if (v === 'doctrine') renderDoctrines();
+                    if (v === 'battle') {
+                        resizeCanvas();
+                        if (!battleActive) {
+                            battleStartBtn.textContent = 'DEPLOY & BATTLE';
+                            battleStartBtn.disabled = false;
+                        }
+                    }
+                    if (v === 'leaderboard') loadLeaderboard();
+                };
+            });
+
+            spawnButton.onclick = () => { initAudio(); spawnUnit(); };
+            document.getElementById('settings-button').onclick = () => document.getElementById('settings-modal').classList.add('active');
+            document.getElementById('settings-close').onclick = () => document.getElementById('settings-modal').classList.remove('active');
+            document.getElementById('reset-button').onclick = () => { document.getElementById('settings-modal').classList.remove('active'); document.getElementById('reset-confirm-modal').classList.add('active'); };
+            document.getElementById('reset-confirm-no').onclick = () => document.getElementById('reset-confirm-modal').classList.remove('active');
+            document.getElementById('reset-confirm-yes').onclick = resetGame;
+            document.getElementById('refresh-leaderboard').onclick = () => { playSound('button_click_sound'); loadLeaderboard(); };
+
+            mergeGrid.onmousedown = e => { const t = e.target.closest('.grid-tile'); if (t && grid[t.dataset.index]) startDrag(t.dataset.index, e.clientX, e.clientY, null); };
+            window.onmousemove = e => moveDrag(e.clientX, e.clientY);
+            window.onmouseup = e => endDrag(e.clientX, e.clientY);
+            mergeGrid.ontouchstart = e => { const t = e.target.closest('.grid-tile'); if (t && grid[t.dataset.index]) startDrag(t.dataset.index, e.touches[0].clientX, e.touches[0].clientY, e.touches[0].identifier); };
+            window.ontouchmove = e => { const t = Array.from(e.touches).find(t => t.identifier === touchId); if (t) moveDrag(t.clientX, t.clientY); };
+            window.ontouchend = e => { const t = Array.from(e.changedTouches).find(t => t.identifier === touchId); if (t) endDrag(t.clientX, t.clientY); };
+
+            await preloadAssets();
+            await loadGame();
+            initGame();
+            
+            // Submit initial score to leaderboard after loading
+            if (mode === 'play') {
+                submitToLeaderboard();
+            }
+
+            if (mode === 'edit') {
+                editIndicator.classList.add('active');
+                lib.showGameParameters({
+                    name: 'Army Merge Settings',
+                    params: {
+                        'Initial Gold': { key: 'gold', type: 'number' },
+                        'Initial Medals': { key: 'medals', type: 'number' },
+                        'Rank Multiplier': { key: 'rankMultiplier', type: 'slider', min: 0.5, max: 2.0, step: 0.1 }
+                    }
+                });
+            }
+            window.onresize = resizeCanvas;
+        }
+    </script>
+</body>
+</html>

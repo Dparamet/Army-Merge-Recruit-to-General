@@ -1,0 +1,301 @@
+{
+  "gold": 100,
+  "medals": 0,
+  "highestRank": 1,
+  "enemyPower": 50,
+  "grid": [
+    null,
+    null,
+    null,
+    null,
+    null,
+    null,
+    null,
+    null,
+    null,
+    null,
+    null,
+    null,
+    null,
+    null,
+    null,
+    null,
+    null,
+    null,
+    null,
+    null,
+    null,
+    null,
+    null,
+    null,
+    null
+  ],
+  "ranks": [
+    {
+      "color": "#B0B0B0",
+      "name": "Recruit",
+      "assetId": "recruit_icon"
+    },
+    {
+      "assetId": "private_icon",
+      "color": "#D2B48C",
+      "name": "Private"
+    },
+    {
+      "assetId": "pfc_icon",
+      "name": "Private First Class",
+      "color": "#C0A080"
+    },
+    {
+      "name": "Corporal",
+      "color": "#CD7F32",
+      "assetId": "corporal_icon"
+    },
+    {
+      "assetId": "sergeant_icon",
+      "color": "#4682B4",
+      "name": "Sergeant"
+    },
+    {
+      "name": "Staff Sergeant",
+      "color": "#3B6E96",
+      "assetId": "ssgt_icon"
+    },
+    {
+      "color": "#2F5A78",
+      "name": "Sergeant First Class",
+      "assetId": "sfc_icon"
+    },
+    {
+      "assetId": "msg_icon",
+      "color": "#24455A",
+      "name": "Master Sergeant"
+    },
+    {
+      "name": "Second Lieutenant",
+      "color": "#228B22",
+      "assetId": "lieutenant_icon"
+    },
+    {
+      "color": "#1D771D",
+      "name": "First Lieutenant",
+      "assetId": "f_lt_icon"
+    },
+    {
+      "assetId": "captain_icon",
+      "color": "#4169E1",
+      "name": "Captain"
+    },
+    {
+      "name": "Major",
+      "color": "#8B008B",
+      "assetId": "major_icon"
+    },
+    {
+      "assetId": "lt_col_icon",
+      "color": "#730073",
+      "name": "Lieutenant Colonel"
+    },
+    {
+      "assetId": "colonel_icon",
+      "name": "Colonel",
+      "color": "#DC143C"
+    },
+    {
+      "name": "Brigadier General",
+      "color": "#B81132",
+      "assetId": "b_gen_icon"
+    },
+    {
+      "color": "#940D28",
+      "name": "Major General",
+      "assetId": "m_gen_icon"
+    },
+    {
+      "assetId": "l_gen_icon",
+      "name": "Lieutenant General",
+      "color": "#FF8C00"
+    },
+    {
+      "name": "General",
+      "color": "#FFD700",
+      "assetId": "general_icon"
+    }
+  ],
+  "classes": [
+    {
+      "role": "frontline",
+      "name": "Infantry",
+      "assetId": "class_infantry_icon",
+      "multiplier": {
+        "range": 1,
+        "attack": 1,
+        "speed": 1,
+        "hp": 1
+      },
+      "color": "#4CAF50"
+    },
+    {
+      "name": "Recon",
+      "assetId": "class_recon_icon",
+      "role": "harasser",
+      "multiplier": {
+        "attack": 0.8,
+        "range": 2,
+        "hp": 0.7,
+        "speed": 1.5
+      },
+      "color": "#FFEB3B"
+    },
+    {
+      "role": "tank",
+      "assetId": "class_heavy_icon",
+      "name": "Heavy",
+      "color": "#2196F3",
+      "multiplier": {
+        "attack": 1.2,
+        "range": 0.8,
+        "hp": 2,
+        "speed": 0.6
+      }
+    },
+    {
+      "multiplier": {
+        "attack": 0.5,
+        "range": 1.2,
+        "hp": 0.8,
+        "speed": 1
+      },
+      "color": "#F44336",
+      "name": "Medic",
+      "assetId": "class_medic_icon",
+      "role": "support"
+    },
+    {
+      "name": "Sniper",
+      "assetId": "class_specops_icon",
+      "role": "dps",
+      "multiplier": {
+        "speed": 1.2,
+        "hp": 1,
+        "range": 1.2,
+        "attack": 1.5
+      },
+      "color": "#9C27B0"
+    },
+    {
+      "multiplier": {
+        "range": 1.5,
+        "attack": 1,
+        "speed": 0.9,
+        "hp": 1.2
+      },
+      "color": "#FF5722",
+      "name": "Artillery",
+      "assetId": "class_specops_icon",
+      "role": "aoe"
+    },
+    {
+      "assetId": "class_specops_icon",
+      "name": "Commander",
+      "role": "aura",
+      "color": "#FFD700",
+      "multiplier": {
+        "hp": 1.5,
+        "speed": 1,
+        "attack": 0.8,
+        "range": 1
+      }
+    }
+  ],
+  "upgrades": [
+    {
+      "name": "Spawn Training",
+      "key": "spawnTraining",
+      "baseCost": 100,
+      "growth": 1.5
+    },
+    {
+      "growth": 1.6,
+      "baseCost": 200,
+      "key": "combatTraining",
+      "name": "Combat Training"
+    },
+    {
+      "key": "logistics",
+      "growth": 1.4,
+      "baseCost": 150,
+      "name": "Logistics"
+    },
+    {
+      "name": "Medical Support",
+      "growth": 1.7,
+      "baseCost": 250,
+      "key": "medicalSupport"
+    },
+    {
+      "key": "tacticalCapacity",
+      "baseCost": 500,
+      "growth": 2,
+      "name": "Tactical Capacity"
+    }
+  ],
+  "stages": [
+    {
+      "background": "#A8D08D",
+      "name": "Training Camp",
+      "enemies": [
+        {
+          "name": "Training Target",
+          "health": 50,
+          "power": 10
+        }
+      ]
+    },
+    {
+      "enemies": [
+        {
+          "power": 30,
+          "name": "Desert Scout",
+          "health": 150
+        }
+      ],
+      "name": "Desert Front",
+      "background": "#E2C08D"
+    },
+    {
+      "background": "#FFFFFF",
+      "enemies": [
+        {
+          "name": "Snow Soldier",
+          "health": 400,
+          "power": 80
+        }
+      ],
+      "name": "Snow Battlefield"
+    },
+    {
+      "enemies": [
+        {
+          "name": "Urban Guerilla",
+          "health": 1000,
+          "power": 200
+        }
+      ],
+      "name": "City Warfare",
+      "background": "#808080"
+    },
+    {
+      "background": "#404040",
+      "enemies": [
+        {
+          "name": "Elite Guard",
+          "health": 5000,
+          "power": 1000
+        }
+      ],
+      "name": "Final Warzone"
+    }
+  ],
+  "rankMultiplier": 1
+}

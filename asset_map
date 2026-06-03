@@ -1,0 +1,212 @@
+// Asset Map (Read-Only)
+// Edit assets in the Media tab.
+// Use these IDs alongside lib to reference assets in your code:
+//
+// Example: lib.getAsset["player_sprite"]
+
+const assets = {
+  "recruit_icon": {
+    "url": "https://d2oir5eh8rty2e.cloudfront.net/assets/images/recruit_icon_a61b5a52-07f3-4688-9be4-adc02576e03d.webp",
+    "type": "image",
+    "aspect_ratio": [
+      715,
+      1395
+    ]
+  },
+  "private_icon": {
+    "url": "https://d2oir5eh8rty2e.cloudfront.net/assets/images/private_icon_ca089757-6a7b-46d0-8148-5c7f406b88bd.webp",
+    "type": "image",
+    "aspect_ratio": [
+      639,
+      1246
+    ]
+  },
+  "corporal_icon": {
+    "url": "https://d2oir5eh8rty2e.cloudfront.net/assets/images/corporal_icon_b7ebaea4-a826-4060-b004-b659166a2c77.webp",
+    "type": "image",
+    "aspect_ratio": [
+      628,
+      1229
+    ]
+  },
+  "sergeant_icon": {
+    "url": "https://d2oir5eh8rty2e.cloudfront.net/assets/images/sergeant_icon_154f55e5-97c0-4719-afe4-bf4ce83b38e2.webp",
+    "type": "image",
+    "aspect_ratio": [
+      640,
+      1248
+    ]
+  },
+  "lieutenant_icon": {
+    "url": "https://d2oir5eh8rty2e.cloudfront.net/assets/images/lieutenant_icon_a2e4ce9b-3928-4f94-8558-bd24fed88187.webp",
+    "type": "image",
+    "aspect_ratio": [
+      639,
+      1247
+    ]
+  },
+  "captain_icon": {
+    "url": "https://d2oir5eh8rty2e.cloudfront.net/assets/images/captain_icon_d3f3c5a1-a8c0-4e78-a686-21e9e865ab3f.webp",
+    "type": "image",
+    "aspect_ratio": [
+      639,
+      1247
+    ]
+  },
+  "major_icon": {
+    "url": "https://d2oir5eh8rty2e.cloudfront.net/assets/images/major_icon_0591890b-8ee7-4a69-8687-f51b5a0f1612.webp",
+    "type": "image",
+    "aspect_ratio": [
+      639,
+      1247
+    ]
+  },
+  "colonel_icon": {
+    "url": "https://d2oir5eh8rty2e.cloudfront.net/assets/images/colonel_icon_ca21270b-14a8-4914-b957-8b9a7554704c.webp",
+    "type": "image",
+    "aspect_ratio": [
+      638,
+      1248
+    ]
+  },
+  "general_icon": {
+    "url": "https://d2oir5eh8rty2e.cloudfront.net/assets/images/general_icon_2643101e-d458-4785-87cb-41ebb6ff20b5.webp",
+    "type": "image",
+    "aspect_ratio": [
+      637,
+      1248
+    ]
+  },
+  "merge_sound": {
+    "url": "https://d2oir5eh8rty2e.cloudfront.net/assets/sounds/effect/merge_sound_a4d8c237-f382-4d6e-92b2-db1384925ac1.mp3",
+    "type": "audio"
+  },
+  "spawn_sound": {
+    "url": "https://d2oir5eh8rty2e.cloudfront.net/assets/sounds/effect/spawn_sound_2c07ea98-5e56-49ef-9812-d41cc53eadeb.mp3",
+    "type": "audio"
+  },
+  "battle_victory_sound": {
+    "url": "https://d2oir5eh8rty2e.cloudfront.net/assets/sounds/effect/battle_victory_sound_a3cd2c82-5ada-42b0-8b5f-38eec34cb771.mp3",
+    "type": "audio"
+  },
+  "button_click_sound": {
+    "url": "https://d2oir5eh8rty2e.cloudfront.net/assets/sounds/effect/button_click_sound_8781e8c4-7b17-4451-ad1b-fc830bbd3450.mp3",
+    "type": "audio"
+  },
+  "pfc_icon": {
+    "url": "https://d2oir5eh8rty2e.cloudfront.net/assets/images/pfc_icon_7ad4ad23-b6c9-4461-b079-411065312a45.webp",
+    "type": "image",
+    "aspect_ratio": [
+      640,
+      1247
+    ]
+  },
+  "ssgt_icon": {
+    "url": "https://d2oir5eh8rty2e.cloudfront.net/assets/images/ssgt_icon_06684783-0600-4dbe-9762-942809145dfa.webp",
+    "type": "image",
+    "aspect_ratio": [
+      638,
+      1248
+    ]
+  },
+  "sfc_icon": {
+    "url": "https://d2oir5eh8rty2e.cloudfront.net/assets/images/sfc_icon_eaa61efd-8913-45d4-8a9c-c30fd5841f58.webp",
+    "type": "image",
+    "aspect_ratio": [
+      638,
+      1247
+    ]
+  },
+  "msg_icon": {
+    "url": "https://d2oir5eh8rty2e.cloudfront.net/assets/images/msg_icon_d772010c-3c0d-41f4-8ebb-44fcf341959b.webp",
+    "type": "image",
+    "aspect_ratio": [
+      638,
+      1247
+    ]
+  },
+  "f_lt_icon": {
+    "url": "https://d2oir5eh8rty2e.cloudfront.net/assets/images/f_lt_icon_0e8ad3db-6625-4504-ba45-db141862abea.webp",
+    "type": "image",
+    "aspect_ratio": [
+      640,
+      1245
+    ]
+  },
+  "lt_col_icon": {
+    "url": "https://d2oir5eh8rty2e.cloudfront.net/assets/images/lt_col_icon_d72e3ac8-a8b8-4fef-a8fd-f16785448ce2.webp",
+    "type": "image",
+    "aspect_ratio": [
+      638,
+      1243
+    ]
+  },
+  "b_gen_icon": {
+    "url": "https://d2oir5eh8rty2e.cloudfront.net/assets/images/b_gen_icon_9070aabb-8a4a-4e23-8d69-263d03abc851.webp",
+    "type": "image",
+    "aspect_ratio": [
+      637,
+      1248
+    ]
+  },
+  "m_gen_icon": {
+    "url": "https://d2oir5eh8rty2e.cloudfront.net/assets/images/m_gen_icon_54a91534-5a09-48c8-bdc7-cd95d3631091.webp",
+    "type": "image",
+    "aspect_ratio": [
+      637,
+      1248
+    ]
+  },
+  "l_gen_icon": {
+    "url": "https://d2oir5eh8rty2e.cloudfront.net/assets/images/l_gen_icon_600a0686-b464-4cb2-a9cf-874c507eb9a4.webp",
+    "type": "image",
+    "aspect_ratio": [
+      637,
+      1248
+    ]
+  },
+  "class_infantry_icon": {
+    "url": "https://d2oir5eh8rty2e.cloudfront.net/assets/images/class_infantry_icon_3d7d6093-cb9b-404b-b5a8-8a5e2607313f.webp",
+    "type": "image",
+    "aspect_ratio": [
+      709,
+      828
+    ]
+  },
+  "class_medic_icon": {
+    "url": "https://d2oir5eh8rty2e.cloudfront.net/assets/images/class_medic_icon_5dc0b9fe-a32d-4b18-80fd-9e136a1ff53e.webp",
+    "type": "image",
+    "aspect_ratio": [
+      802,
+      802
+    ]
+  },
+  "class_recon_icon": {
+    "url": "https://d2oir5eh8rty2e.cloudfront.net/assets/images/class_recon_icon_8916a15a-8f7d-488b-9a03-60c59cae266a.webp",
+    "type": "image",
+    "aspect_ratio": [
+      831,
+      674
+    ]
+  },
+  "class_heavy_icon": {
+    "url": "https://d2oir5eh8rty2e.cloudfront.net/assets/images/class_heavy_icon_1b37279a-b86d-48bc-b00d-d83179e11f0f.webp",
+    "type": "image",
+    "aspect_ratio": [
+      790,
+      673
+    ]
+  },
+  "class_specops_icon": {
+    "url": "https://d2oir5eh8rty2e.cloudfront.net/assets/images/class_specops_icon_35d21fc0-312e-48c2-a250-80a4520950b9.webp",
+    "type": "image",
+    "aspect_ratio": [
+      883,
+      884
+    ]
+  },
+  "lofi_background_music": {
+    "url": "https://d2oir5eh8rty2e.cloudfront.net/assets/sounds/effect/lofi_background_music_33998dd5-61ad-4a2d-8e0d-d67908fe6ac3.mp3",
+    "type": "audio"
+  }
+};
