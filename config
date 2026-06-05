@@ -250,7 +250,8 @@
           "health": 50,
           "power": 10
         }
-      ]
+      ],
+      "weather": "CLEAR"
     },
     {
       "enemies": [
@@ -261,7 +262,8 @@
         }
       ],
       "name": "Desert Front",
-      "background": "#E2C08D"
+      "background": "#E2C08D",
+      "weather": "SANDSTORM"
     },
     {
       "background": "#FFFFFF",
@@ -272,7 +274,8 @@
           "power": 80
         }
       ],
-      "name": "Snow Battlefield"
+      "name": "Snow Battlefield",
+      "weather": "SNOW"
     },
     {
       "enemies": [
@@ -283,7 +286,8 @@
         }
       ],
       "name": "City Warfare",
-      "background": "#808080"
+      "background": "#808080",
+      "weather": "FOG"
     },
     {
       "background": "#404040",
@@ -294,8 +298,9 @@
           "power": 1000
         }
       ],
-      "name": "Final Warzone"
+      "name": "Final Warzone",
+      "weather": "RAIN"
     }
   ],
-  "rankMultiplier": 1
+  "rankMultiplier": 2
 }

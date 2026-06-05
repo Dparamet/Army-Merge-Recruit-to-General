@@ -31,25 +31,124 @@
             --space-lg: 32px;
             --space-xl: 48px;
 
-            --bg-sky-top: #87CEEB;
-            --bg-sky-bottom: #E0F6FF;
-            --grid-beige: #F5DEB3;
-            --tile-cream: #FFF8DC;
-            --spawn-orange: #FF8C00;
-            --battle-green: #4A7C59;
-            --text-dark: #2C3E50;
-            --gold-color: #FFD700;
-            --medal-color: #E5E4E2;
+            --bg-sky-top: #98A67E; /* Cozy Olive */
+            --bg-sky-bottom: #D9C5A0; /* Soft Sand */
+            --grid-beige: #C5B391; /* Tactical Khaki */
+            --tile-cream: #EAE2D1; /* Light Parchment */
+            --spawn-orange: #E67E22; /* Burnt Orange */
+            --battle-green: #556B2F; /* Dark Olive */
+            --text-dark: #3E442D; /* Deep Forest */
+            --gold-color: #D4AF37; /* Antique Gold */
+            --medal-color: #B2BEB5; /* Ash Gray */
+            --ui-panel: rgba(255, 255, 255, 0.85);
+            --combo-color: #FF4500;
+        }
+
+        @keyframes breathe {
+            0% { transform: scale(1); }
+            50% { transform: scale(1.03); }
+            100% { transform: scale(1); }
+        }
+        @keyframes jitter {
+            0%, 100% { transform: translate(0,0) rotate(0deg); }
+            25% { transform: translate(-1px, 1px) rotate(-1deg); }
+            75% { transform: translate(1px, -1px) rotate(1deg); }
+        }
+        @keyframes command-glow {
+            0%, 100% { box-shadow: 0 0 10px rgba(255, 215, 0, 0.4), inset 0 0 15px rgba(0,0,0,0.4); }
+            50% { box-shadow: 0 0 25px rgba(255, 215, 0, 0.8), inset 0 0 15px rgba(0,0,0,0.4); }
+        }
+        @keyframes shake-screen {
+            0%, 100% { transform: translate(0, 0); }
+            10%, 30%, 50%, 70%, 90% { transform: translate(-4px, -4px); }
+            20%, 40%, 60%, 80% { transform: translate(4px, 4px); }
+        }
+        @keyframes float-up {
+            0% { transform: translateY(0) scale(1); opacity: 1; }
+            100% { transform: translateY(-100px) scale(1.5); opacity: 0; }
+        }
+        @keyframes merge-flash {
+            0% { transform: scale(1); filter: brightness(1); }
+            50% { transform: scale(1.2); filter: brightness(2); }
+            100% { transform: scale(1); filter: brightness(1); }
+        }
+        @keyframes elite-glow {
+            0%, 100% { box-shadow: 0 0 15px rgba(255,215,0,0.6), inset 0 0 15px rgba(255,215,0,0.3); }
+            50% { box-shadow: 0 0 30px rgba(255,215,0,1), inset 0 0 20px rgba(255,215,0,0.6); }
+        }
+        @keyframes rank-pulse {
+            0% { transform: scale(1); }
+            50% { transform: scale(1.15); }
+            100% { transform: scale(1); }
+        }
+
+        .screen-shake { animation: shake-screen 0.3s ease-in-out; }
+        .merge-flash { animation: merge-flash 0.4s ease-out; }
+        .elite-unit { animation: elite-glow 1.5s ease-in-out infinite; border: 3px solid #FFD700; }
+
+        .combo-display {
+            position: absolute;
+            top: 220px;
+            right: 20px;
+            z-index: 100;
+            pointer-events: none;
+            display: none;
+            flex-direction: column;
+            align-items: flex-end;
+        }
+        .combo-count {
+            font-size: 48px;
+            font-weight: 900;
+            color: var(--combo-color);
+            text-shadow: 2px 2px 0 #000, 0 0 10px rgba(255,69,0,0.5);
+            font-family: 'Fredoka', sans-serif;
+        }
+        .combo-label {
+            font-size: 18px;
+            font-weight: 800;
+            color: white;
+            background: rgba(0,0,0,0.5);
+            padding: 2px 10px;
+            border-radius: 10px;
+            margin-top: -10px;
+        }
+
+        .unit.low-rank .unit-character { animation: jitter 2s infinite; }
+        .unit.mid-rank .unit-character { animation: breathe 3s infinite; }
+        .unit.high-rank { animation: command-glow 2s infinite; }
+        
+        .floating-combo-text {
+            position: fixed;
+            pointer-events: none;
+            z-index: 2000;
+            font-weight: 900;
+            color: #FFD700;
+            text-shadow: 2px 2px 0 #000;
+            animation: float-up 1s forwards;
+            font-family: 'Fredoka', sans-serif;
+            white-space: nowrap;
         }
 
         #game-world {
             position: relative;
             width: 100%;
             height: 100%;
-            background: linear-gradient(to bottom, var(--bg-sky-top), var(--bg-sky-bottom));
+            background: linear-gradient(135deg, var(--bg-sky-top), var(--bg-sky-bottom));
+            background-attachment: fixed;
             overflow: hidden;
             display: flex;
             flex-direction: column;
+        }
+
+        /* Subtle Camo Overlay */
+        #game-world::before {
+            content: '';
+            position: absolute;
+            top: 0; left: 0; right: 0; bottom: 0;
+            background-image: radial-gradient(circle at 20% 30%, rgba(255,255,255,0.05) 0%, transparent 20%),
+                              radial-gradient(circle at 80% 70%, rgba(0,0,0,0.03) 0%, transparent 25%);
+            pointer-events: none;
+            z-index: 1;
         }
 
         .top-ui {
@@ -57,8 +156,9 @@
             height: 200px;
             padding: var(--space-sm);
             z-index: 10;
-            background: rgba(255, 255, 255, 0.2);
-            backdrop-filter: blur(4px);
+            background: rgba(62, 68, 45, 0.15);
+            backdrop-filter: blur(8px);
+            border-bottom: 2px solid rgba(0,0,0,0.1);
             display: flex;
             flex-direction: column;
             gap: 10px;
@@ -169,15 +269,98 @@
 
         .grid-tile {
             background: var(--tile-cream);
-            border: 2px dashed rgba(0,0,0,0.1);
+            border: 2px solid rgba(0,0,0,0.05);
             border-radius: 12px;
             position: relative;
             cursor: pointer;
             transition: all var(--transition-fast);
+            box-shadow: inset 0 2px 4px rgba(0,0,0,0.05);
         }
-        .grid-tile.occupied { background: white; border: 2px solid rgba(0,0,0,0.1); box-shadow: 0 2px 8px rgba(0,0,0,0.1); }
+        .grid-tile.occupied { 
+            background: transparent; 
+            border: none; 
+            box-shadow: none; 
+        }
         .grid-tile.dragging { opacity: 0.3; }
-        .grid-tile.highlight { border-color: var(--gold-color); box-shadow: 0 0 16px var(--gold-color); }
+        .grid-tile.highlight { 
+            border-color: #4CAF50; 
+            box-shadow: 0 0 20px rgba(76, 175, 80, 0.6);
+            background: rgba(76, 175, 80, 0.1);
+        }
+        .selection-badge {
+            position: absolute;
+            top: 5px;
+            right: 5px;
+            background: #4CAF50;
+            color: white;
+            padding: 2px 6px;
+            border-radius: 8px;
+            font-size: 10px;
+            font-weight: 900;
+            z-index: 5;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.3);
+        }
+        #squad-deployment-bar {
+            width: 100%;
+            height: 80px;
+            background: rgba(0,0,0,0.4);
+            border-radius: 12px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 10px;
+            padding: 5px;
+            border: 2px solid rgba(255,255,255,0.1);
+        }
+        .squad-slot {
+            width: 60px;
+            height: 60px;
+            background: rgba(255,255,255,0.1);
+            border-radius: 8px;
+            border: 1px dashed rgba(255,255,255,0.3);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            overflow: hidden;
+        }
+        #skill-bar {
+            position: absolute;
+            bottom: 120px;
+            left: 50%;
+            transform: translateX(-50%);
+            display: flex;
+            gap: 15px;
+            z-index: 100;
+        }
+        .skill-btn {
+            width: 80px;
+            height: 80px;
+            background: rgba(0,0,0,0.7);
+            border: 3px solid #FFD700;
+            border-radius: 50%;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            position: relative;
+            transition: 0.2s;
+        }
+        .skill-btn:disabled { opacity: 0.5; filter: grayscale(1); cursor: not-allowed; }
+        .skill-btn img { width: 40px; height: 40px; }
+        .skill-label { font-size: 9px; color: white; font-weight: 800; text-align: center; margin-top: 2px; }
+        .skill-cooldown {
+            position: absolute;
+            top: 0; left: 0; width: 100%; height: 100%;
+            background: rgba(0,0,0,0.6);
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-weight: 900;
+            font-size: 18px;
+        }
 
         .unit {
             width: 100%;
@@ -186,8 +369,18 @@
             align-items: center;
             justify-content: center;
             position: relative;
-            padding: 6px;
+            padding: 4px;
             overflow: hidden;
+            border-radius: 12px;
+        }
+        /* Stitching effect for a "patch" feel */
+        .unit::after {
+            content: '';
+            position: absolute;
+            top: 4px; left: 4px; right: 4px; bottom: 4px;
+            border: 1px dashed rgba(255,255,255,0.4);
+            border-radius: 8px;
+            pointer-events: none;
         }
         .unit-main {
             display: flex;
@@ -226,7 +419,7 @@
             display: flex;
             align-items: center;
             justify-content: center;
-            background: radial-gradient(circle, rgba(255,255,255,0.5) 0%, rgba(255,255,255,0) 70%);
+            background: radial-gradient(circle, rgba(0,0,0,0.05) 0%, rgba(0,0,0,0) 70%);
         }
         .unit-insignia-svg {
             width: 100%;
@@ -235,18 +428,20 @@
         }
         .unit-name {
             font-size: 9px;
-            font-weight: 800;
-            color: var(--text-dark);
+            font-weight: 900;
+            color: rgba(0,0,0,0.8);
             text-transform: uppercase;
             text-align: center;
             line-height: 1.1;
             width: 100%;
+            background: rgba(255,255,255,0.3);
+            border-radius: 3px;
+            padding: 1px 0;
             display: -webkit-box;
             -webkit-line-clamp: 2;
             -webkit-box-orient: vertical;
             overflow: hidden;
             text-overflow: ellipsis;
-            padding: 0 2px;
         }
 
         .unit-rank-badge { display: none; } /* Hidden in new layout */
@@ -255,17 +450,21 @@
         .spawn-button {
             width: 120px;
             height: 120px;
-            background: linear-gradient(135deg, var(--spawn-orange), #FFA500);
-            border: none;
+            background: linear-gradient(135deg, var(--spawn-orange), #D35400);
+            border: 4px solid rgba(255,255,255,0.3);
             border-radius: 50%;
             color: white;
             font-size: 60px;
             font-weight: 800;
             cursor: pointer;
-            box-shadow: 0 8px 24px rgba(255, 140, 0, 0.4);
-            transition: all var(--transition-fast);
+            box-shadow: 0 8px 0 #A04000, 0 12px 24px rgba(0,0,0,0.3);
+            transition: all 0.1s;
+            position: relative;
         }
-        .spawn-button:active { transform: scale(0.9); }
+        .spawn-button:active { 
+            transform: translateY(4px); 
+            box-shadow: 0 4px 0 #A04000, 0 6px 12px rgba(0,0,0,0.3);
+        }
         .spawn-button.full { font-size: 16px; animation: shake 0.5s; }
 
         /* Battle View */
@@ -282,16 +481,22 @@
         #battle-canvas { width: 100%; height: 100%; display: block; }
         .battle-ui { height: 100px; display: flex; justify-content: center; align-items: center; }
         .battle-btn {
-            width: 280px;
-            height: 70px;
-            background: linear-gradient(135deg, var(--battle-green), #5A9C69);
-            border: none;
-            border-radius: 35px;
+            width: 320px;
+            height: 80px;
+            background: linear-gradient(135deg, var(--battle-green), #6B8E23);
+            border: 4px solid rgba(255,255,255,0.2);
+            border-radius: 40px;
             color: white;
-            font-size: 24px;
-            font-weight: 800;
+            font-size: 28px;
+            font-weight: 900;
+            letter-spacing: 2px;
             cursor: pointer;
-            box-shadow: 0 4px 16px rgba(74, 124, 89, 0.4);
+            box-shadow: 0 6px 0 #3E442D, 0 10px 20px rgba(0,0,0,0.3);
+            transition: all 0.1s;
+        }
+        .battle-btn:active {
+            transform: translateY(4px);
+            box-shadow: 0 2px 0 #3E442D, 0 4px 10px rgba(0,0,0,0.3);
         }
 
         /* Upgrades & Missions */
@@ -325,23 +530,42 @@
         .bottom-nav {
             width: 100%;
             height: 120px;
-            background: white;
+            background: #E5DCC5; /* Muted tan */
             display: flex;
             justify-content: space-around;
             align-items: center;
-            border-top: 2px solid rgba(0,0,0,0.1);
+            border-top: 3px solid var(--battle-green);
             z-index: 20;
             padding-bottom: 20px;
+            box-shadow: 0 -4px 10px rgba(0,0,0,0.1);
         }
-        .nav-item { display: flex; flex-direction: column; align-items: center; gap: 4px; cursor: pointer; opacity: 0.5; transition: 0.2s; }
-        .nav-item.active { opacity: 1; color: var(--battle-green); transform: translateY(-5px) scale(1.1); }
-        .nav-icon { font-size: 40px; }
+        .nav-item { display: flex; flex-direction: column; align-items: center; gap: 4px; cursor: pointer; opacity: 0.6; transition: 0.2s; color: #3E442D; }
+        .nav-item.active { opacity: 1; color: var(--battle-green); transform: translateY(-8px); }
+        .nav-icon { font-size: 40px; filter: drop-shadow(0 2px 2px rgba(0,0,0,0.2)); }
         .nav-label { font-size: 14px; font-weight: 800; }
 
         /* Modals */
         .modal-overlay { position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: rgba(0,0,0,0.8); display: none; align-items: center; justify-content: center; z-index: 100; }
         .modal-overlay.active { display: flex; }
-        .modal { background: white; border-radius: 20px; padding: var(--space-lg); width: 90%; max-width: 600px; text-align: center; box-shadow: 0 10px 40px rgba(0,0,0,0.5); }
+        .modal { 
+            background: #FDFBF7; 
+            border: 5px solid var(--battle-green);
+            border-radius: 24px; 
+            padding: var(--space-lg); 
+            width: 90%; 
+            max-width: 600px; 
+            text-align: center; 
+            box-shadow: 0 15px 50px rgba(0,0,0,0.6); 
+            position: relative;
+        }
+        .modal::before {
+            content: '';
+            position: absolute;
+            top: 5px; left: 5px; right: 5px; bottom: 5px;
+            border: 2px dashed rgba(0,0,0,0.1);
+            border-radius: 18px;
+            pointer-events: none;
+        }
         .modal-header { font-family: 'Fredoka', sans-serif; font-size: 36px; margin-bottom: 20px; color: var(--text-dark); }
         .modal-btn { padding: 15px 30px; border: none; border-radius: 12px; font-size: 20px; font-weight: 700; cursor: pointer; margin: 10px; }
         .modal-btn.primary { background: var(--battle-green); color: white; }
@@ -454,6 +678,10 @@
 
         <!-- Top UI -->
         <div class="top-ui">
+            <div class="combo-display" id="combo-display">
+                <div class="combo-count" id="combo-count">2x</div>
+                <div class="combo-label" id="combo-label">TACTICAL COMBO</div>
+            </div>
             <div class="currency-bar">
                 <div class="currency-item">🪙 <span id="gold-count">0</span></div>
                 <div class="currency-item">🏅 <span id="medal-count">0</span></div>
@@ -480,9 +708,23 @@
             <!-- Battle View -->
             <div class="view" id="view-battle">
                 <div id="battle-view-content">
-                    <div id="battle-canvas-container">
-                        <canvas id="battle-canvas"></canvas>
+                    <!-- Unit Selection Screen -->
+                    <div id="battle-selection-ui" style="flex: 1; display: flex; flex-direction: column; gap: 10px;">
+                        <div style="background: rgba(255,255,255,0.3); border-radius: 12px; padding: 10px; text-align: center;">
+                            <h2 style="color: var(--text-dark); margin-bottom: 5px; font-family: 'Fredoka', sans-serif;">SQUAD DEPLOYMENT</h2>
+                            <div id="squad-deployment-bar"></div>
+                        </div>
+                        <div class="grid-container" style="margin: 0 auto; width: 660px; height: 600px;">
+                            <div class="merge-grid" id="selection-grid"></div>
+                        </div>
                     </div>
+
+                    <!-- Battle Canvas -->
+                    <div id="battle-canvas-container" style="display: none; flex: 1; position: relative;">
+                        <canvas id="battle-canvas"></canvas>
+                        <div id="skill-bar"></div>
+                    </div>
+
                     <div class="battle-ui">
                         <button class="battle-btn" id="battle-start-btn">DEPLOY & BATTLE</button>
                     </div>
@@ -555,6 +797,7 @@
         </div>
 
         <button class="settings-button" id="settings-button">⚙️</button>
+        <button class="settings-button" id="music-toggle-button" style="right: 70px;">🎵</button>
 
         <!-- Settings Modal -->
         <div class="modal-overlay" id="settings-modal">
@@ -601,6 +844,7 @@
             const audioCache = {};
             let audioContext = null;
             let bgMusicSource = null;
+            let bgMusicGainNode = null;
             let isMusicPlaying = false;
 
             // Runtime State
@@ -610,6 +854,82 @@
             let isDragging = false;
             let touchId = null;
             let currentView = 'merge';
+            let selectedIndices = []; // Indices of units selected for battle from merge grid
+            
+            // Combo System State
+            let comboCount = 0;
+            // Skills state
+            let skillCooldowns = {
+                reinforcements: 0,
+                humvee: 0,
+                a10: 0
+            };
+
+            function updateSkillBar() {
+                const bar = document.getElementById('skill-bar');
+                if (!bar) return;
+                bar.innerHTML = '';
+
+                const availableSkills = [];
+                const highestSelected = selectedIndices.map(idx => grid[idx]?.rank || 0).reduce((a, b) => Math.max(a, b), 0);
+
+                if (highestSelected >= 5) availableSkills.push({ id: 'reinforcements', name: 'CALL PRIVATES', icon: 'recruit_icon', cd: 30 });
+                if (highestSelected >= 7) availableSkills.push({ id: 'humvee', name: 'HUMVEE SUPP.', icon: 'humvee_icon', cd: 45 });
+                if (highestSelected >= 11) availableSkills.push({ id: 'a10', name: 'A-10 STRIKE', icon: 'a10_icon', cd: 60 });
+
+                availableSkills.forEach(s => {
+                    const btn = document.createElement('div');
+                    btn.className = 'skill-btn';
+                    const cd = skillCooldowns[s.id];
+                    if (cd > 0) btn.classList.add('disabled');
+                    
+                    const imgUrl = assetCache[s.icon]?.info.url || '';
+                    btn.innerHTML = `
+                        <img src="${imgUrl}">
+                        <div class="skill-label">${s.name}</div>
+                        ${cd > 0 ? `<div class="skill-cooldown">${Math.ceil(cd)}</div>` : ''}
+                    `;
+                    if (cd <= 0 && battleState === 'FIGHTING') {
+                        btn.onclick = () => triggerSkill(s.id, s.cd);
+                    }
+                    bar.appendChild(btn);
+                });
+            }
+
+            function triggerSkill(id, cd) {
+                if (skillCooldowns[id] > 0) return;
+                skillCooldowns[id] = cd;
+                playSound('button_click_sound');
+
+                if (id === 'reinforcements') {
+                    showToast("REINFORCEMENTS INBOUND!");
+                    for(let i=0; i<3; i++) {
+                        const u = { rank: 2, classIndex: 0, team: 'p', x: 20, y: 100 + i * 150, hp: 200, maxHp: 200, atk: 30, speed: 12, role: 'frontline', assetId: 'private_icon', visual: { bob: Math.random(), flash: 0, scale: 1, tilt: 0, muzzleFlash: 0, recoil: 0 }, lastAtk: 0 };
+                        battleUnits.push(u);
+                    }
+                } else if (id === 'humvee') {
+                    showToast("HUMVEE DEPLOYED!");
+                    const h = { rank: 8, team: 'p', x: 20, y: battleCanvas.height / 2, hp: 1500, maxHp: 1500, atk: 100, speed: 15, role: 'tank', assetId: 'humvee_icon', visual: { bob: 0, flash: 0, scale: 1.5, tilt: 0, muzzleFlash: 0, recoil: 0 }, lastAtk: 0, isVehicle: true };
+                    battleUnits.push(h);
+                } else if (id === 'a10') {
+                    showToast("BRRRRRRRRRRRRT! ✈️");
+                    playSound('a10_strike_sound');
+                    gameWorld.classList.add('screen-shake');
+                    setTimeout(() => gameWorld.classList.remove('screen-shake'), 2000);
+                    battleEnemies.forEach(e => {
+                        e.hp -= 800; e.visual.flash = 1;
+                        battleFloatingTexts.push({ x: e.x, y: e.y, text: '💥', life: 1, size: 50 });
+                    });
+                }
+                updateSkillBar();
+            }
+            let lastMergeTime = 0;
+            let comboTimeout = null;
+            
+            // Battle Events & Weather State
+            let currentWaveModifier = null;
+            let activeBattleEvent = null;
+            let battleEventTimer = 0;
 
             // Expanded Persistent State
             let gameState = {
@@ -661,20 +981,24 @@
 
             function showToast(msg) {
                 const t = document.getElementById('toast');
+                if (!t) return;
                 t.textContent = msg;
                 t.style.display = 'block';
-                setTimeout(() => t.style.display = 'none', 2500);
+                setTimeout(() => { if(t) t.style.display = 'none'; }, 2500);
             }
 
             function initAudio() {
                 if (!audioContext) audioContext = new (window.AudioContext || window.webkitAudioContext)();
+                if (audioContext.state === 'suspended') audioContext.resume();
             }
 
             async function preloadAssets() {
+                initAudio();
                 const rankIds = window.gameConfig.ranks.map(r => r.assetId);
                 const classIds = window.gameConfig.classes.map(c => c.assetId);
-                const audioIds = ['merge_sound', 'spawn_sound', 'battle_victory_sound', 'button_click_sound', 'lofi_background_music'];
-                const allImgs = [...new Set([...rankIds, ...classIds])];
+                const audioIds = ['merge_sound', 'spawn_sound', 'battle_victory_sound', 'button_click_sound', 'lofi_background_music', 'a10_strike_sound', 'skill_cooldown_sound'];
+                const extraImgs = ['humvee_icon', 'a10_icon'];
+                const allImgs = [...new Set([...rankIds, ...classIds, ...extraImgs])];
                 const promises = allImgs.map(id => {
                     return new Promise(resolve => {
                         const info = lib.getAsset(id);
@@ -702,10 +1026,17 @@
             }
 
             function playSound(id) {
+                initAudio();
                 if (!audioContext || !audioCache[id]) return;
                 const src = audioContext.createBufferSource();
                 src.buffer = audioCache[id];
-                src.connect(audioContext.destination);
+                
+                const gainNode = audioContext.createGain();
+                // Significantly lower volume for victory sound as requested
+                gainNode.gain.value = (id === 'battle_victory_sound') ? 0.2 : 0.6;
+                
+                src.connect(gainNode);
+                gainNode.connect(audioContext.destination);
                 src.start(0);
             }
 
@@ -716,14 +1047,30 @@
                 bgMusicSource.buffer = audioCache['lofi_background_music'];
                 bgMusicSource.loop = true;
                 
-                const gainNode = audioContext.createGain();
-                gainNode.gain.value = 0.4; // 40% volume for background music
+                bgMusicGainNode = audioContext.createGain();
+                bgMusicGainNode.gain.value = 0.15; // Lower volume for background music
                 
-                bgMusicSource.connect(gainNode);
-                gainNode.connect(audioContext.destination);
+                bgMusicSource.connect(bgMusicGainNode);
+                bgMusicGainNode.connect(audioContext.destination);
                 
                 bgMusicSource.start(0);
                 isMusicPlaying = true;
+            }
+
+            function stopBackgroundMusic() {
+                if (bgMusicSource && isMusicPlaying) {
+                    bgMusicSource.stop();
+                    isMusicPlaying = false;
+                }
+            }
+
+            function toggleMusic() {
+                initAudio();
+                if (isMusicPlaying) {
+                    stopBackgroundMusic();
+                } else {
+                    startBackgroundMusic();
+                }
             }
 
             async function saveGame() {
@@ -863,20 +1210,24 @@
             }
 
             function updateUI() {
-                goldCount.textContent = Math.floor(gameState.gold);
-                medalCount.textContent = gameState.medals;
+                if (goldCount) goldCount.textContent = Math.floor(gameState.gold);
+                if (medalCount) medalCount.textContent = gameState.medals;
                 const stage = window.gameConfig.stages[gameState.currentStage % window.gameConfig.stages.length];
-                stageDisplay.textContent = `Wave ${gameState.currentStage + 1}: ${stage.name}`;
-                progressFill.style.width = `${(gameState.highestRank / 18) * 100}%`;
-                prestigeLvlDisplay.textContent = gameState.prestigeRank;
-                prestigeBtn.disabled = gameState.highestRank < 14;
+                if (stageDisplay) stageDisplay.textContent = `Wave ${gameState.currentStage + 1}: ${stage.name}`;
+                if (progressFill) progressFill.style.width = `${(gameState.highestRank / 18) * 100}%`;
+                if (prestigeLvlDisplay) prestigeLvlDisplay.textContent = gameState.prestigeRank;
+                if (prestigeBtn) prestigeBtn.disabled = gameState.highestRank < 14;
                 renderRankPreview();
             }
 
             function renderRankPreview() {
                 rankPreview.innerHTML = '';
+                // Ensure we always show at least up to Lieutenant (Rank 9) or 5 ranks ahead of highest
+                const showUpTo = Math.max(9, gameState.highestRank + 5);
+                
                 window.gameConfig.ranks.forEach((r, i) => {
-                    if (i >= 8 && !gameState.unlockedOfficers) return;
+                    if (i >= showUpTo) return; // Limit preview length for performance/UI clarity
+                    
                     const el = document.createElement('div');
                     el.className = 'rank-preview-item' + (i < gameState.highestRank ? '' : ' locked');
                     if (i < gameState.highestRank) {
@@ -884,7 +1235,13 @@
                             <div style="width:60%;height:60%;">${getInsigniaHTML(i+1)}</div>
                             <div style="font-size:8px;font-weight:800;text-align:center;">${r.name}</div>
                         </div>`;
-                    } else { el.textContent = '?'; }
+                    } else { 
+                        // Always show the name of the next few ranks to build anticipation
+                        el.innerHTML = `<div style="width:100%;height:100%;display:flex;flex-direction:column;align-items:center;justify-content:center;opacity:0.3;">
+                            <div style="font-size:20px;">🔒</div>
+                            <div style="font-size:7px;font-weight:800;text-align:center;">${r.name}</div>
+                        </div>`;
+                    }
                     rankPreview.appendChild(el);
                 });
             }
@@ -897,6 +1254,73 @@
                     tile.dataset.index = i;
                     if (u) tile.appendChild(createUnitEl(u));
                     mergeGrid.appendChild(tile);
+                });
+            }
+
+            function renderSelectionGrid() {
+                const sGrid = document.getElementById('selection-grid');
+                const sBar = document.getElementById('squad-deployment-bar');
+                if (!sGrid || !sBar) return;
+                sGrid.innerHTML = '';
+                sBar.innerHTML = '';
+                
+                selectedIndices = selectedIndices.filter(idx => grid[idx] !== null);
+                
+                const cap = 4 + gameState.upgrades.tacticalCapacity;
+                
+                // Render Squad Bar
+                for (let i = 0; i < cap; i++) {
+                    const slot = document.createElement('div');
+                    slot.className = 'squad-slot';
+                    const idx = selectedIndices[i];
+                    if (idx !== undefined && grid[idx]) {
+                        const u = grid[idx];
+                        const rank = window.gameConfig.ranks[u.rank - 1];
+                        slot.innerHTML = `<img src="${assetCache[rank.assetId]?.info.url}" style="width:80%; height:80%; object-fit:contain;">`;
+                        slot.style.border = '2px solid #4CAF50';
+                        slot.style.background = 'rgba(76, 175, 80, 0.2)';
+                    } else {
+                        slot.innerHTML = `<div style="font-size:20px; color:rgba(255,255,255,0.2)">+</div>`;
+                    }
+                    sBar.appendChild(slot);
+                }
+
+                grid.forEach((u, i) => {
+                    const tile = document.createElement('div');
+                    tile.className = 'grid-tile' + (u ? ' occupied' : ' empty');
+                    const isSelected = selectedIndices.includes(i);
+                    if (isSelected) tile.classList.add('highlight');
+                    
+                    tile.dataset.index = i;
+                    if (u) {
+                        const unitEl = createUnitEl(u);
+                        if (selectedIndices.length >= cap && !isSelected) {
+                            unitEl.style.opacity = '0.4';
+                        }
+                        tile.appendChild(unitEl);
+                        
+                        if (isSelected) {
+                            const badge = document.createElement('div');
+                            badge.className = 'selection-badge';
+                            badge.textContent = 'READY';
+                            tile.appendChild(badge);
+                        }
+                    }
+                    
+                    tile.onclick = () => {
+                        if (!u) return;
+                        const sIdx = selectedIndices.indexOf(i);
+                        if (sIdx > -1) {
+                            selectedIndices.splice(sIdx, 1);
+                        } else if (selectedIndices.length < cap) {
+                            selectedIndices.push(i);
+                            playSound('button_click_sound');
+                        } else {
+                            showToast(`Squad full! (Max ${cap})`);
+                        }
+                        renderSelectionGrid();
+                    };
+                    sGrid.appendChild(tile);
                 });
             }
 
@@ -949,16 +1373,76 @@
                 const cls = window.gameConfig.classes[u.classIndex || 0];
                 const el = document.createElement('div');
                 el.className = 'unit';
-                el.innerHTML = `<div class="unit-main">
-                    <div class="unit-character"><img class="char-img" src="${assetCache[rank.assetId]?.info.url || ''}"></div>
+                
+                // Add Personality Class
+            // Unit size progression: Scale units by rank (0.8 to 1.3)
+            const rankScale = 0.8 + (u.rank / 18) * 0.5;
+            el.style.transform = `scale(${rankScale})`;
+            
+            if (u.isElite) el.classList.add('elite-unit');
+
+            el.innerHTML = `<div class="unit-main">
+                    <div class="unit-character">
+                        <img class="char-img" src="${assetCache[rank.assetId]?.info.url || ''}">
+                        ${u.battlesSurvived > 0 ? `<div style="position:absolute;top:0;left:0;font-size:10px;filter:drop-shadow(1px 1px 0 #000)">${u.battlesSurvived > 5 ? '🏅' : '🩹'}</div>` : ''}
+                    </div>
                     <div class="unit-info">
                         <div class="unit-insignia-container">${getInsigniaHTML(u.rank)}</div>
-                        <div class="unit-name">${rank.name}</div>
+                        <div class="unit-name">${u.isElite ? 'ELITE ' : ''}${rank.name}</div>
                     </div>
                 </div>`;
-                el.style.background = `linear-gradient(135deg, ${rank.color}, #ffffffaa)`;
-                el.style.border = `3px solid ${cls.color}`;
+            
+            // Add Veteran Visual Progression
+            if (u.rank >= 5) { // Officers get more gear
+                const medal = document.createElement('div');
+                medal.style.position = 'absolute';
+                medal.style.top = '2px';
+                medal.style.right = '2px';
+                medal.textContent = u.rank >= 14 ? '🎖️' : '🏅';
+                medal.style.fontSize = '12px';
+                el.appendChild(medal);
+            }
+            
+            if (u.isElite) {
+                const glow = document.createElement('div');
+                glow.style.position = 'absolute';
+                glow.style.top = '0'; glow.style.left = '0'; glow.style.right = '0'; glow.style.bottom = '0';
+                glow.style.boxShadow = 'inset 0 0 15px rgba(255,215,0,0.8)';
+                glow.style.pointerEvents = 'none';
+                el.appendChild(glow);
+            }
+
+            // Veteran Scars visually if survived many battles
+            if (u.battlesSurvived > 10) {
+                const scar = document.createElement('div');
+                scar.style.position = 'absolute';
+                scar.style.bottom = '4px';
+                scar.style.right = '4px';
+                scar.textContent = '🛡️';
+                scar.style.fontSize = '10px';
+                el.appendChild(scar);
+            }
+
+                // Use a consistent military-themed background for all units
+                // We use the same base color and olive border to ensure they look like a unified team
+                el.style.backgroundColor = '#556B2F'; // Dark Olive Green for all units
+                el.style.backgroundImage = `linear-gradient(135deg, rgba(255,255,255,0.1) 0%, rgba(0,0,0,0.2) 100%), repeating-linear-gradient(45deg, rgba(0,0,0,0.02) 0px, rgba(0,0,0,0.02) 1px, transparent 1px, transparent 2px)`;
+                el.style.border = `4px solid #3E442D`; // Consistent dark border
+                el.style.boxShadow = `inset 0 0 15px rgba(0,0,0,0.4), 0 4px 8px rgba(0,0,0,0.3)`;
                 el.style.borderRadius = '12px';
+                
+                // Add a small indicator for the class color so players can still distinguish roles without being confused by the whole border
+                const classIndicator = document.createElement('div');
+                classIndicator.style.position = 'absolute';
+                classIndicator.style.top = '4px';
+                classIndicator.style.left = '4px';
+                classIndicator.style.width = '8px';
+                classIndicator.style.height = '8px';
+                classIndicator.style.borderRadius = '50%';
+                classIndicator.style.backgroundColor = cls.color;
+                classIndicator.style.boxShadow = '0 0 4px rgba(0,0,0,0.5)';
+                el.appendChild(classIndicator);
+
                 return el;
             }
 
@@ -975,28 +1459,164 @@
             }
 
             function mergeUnits(from, to) {
+                if (from === to) return;
                 if (!grid[from] || !grid[to] || grid[from].rank !== grid[to].rank) return;
+                
+                const wasElite = grid[from].isElite || grid[to].isElite;
+                const now = Date.now();
+                if (now - lastMergeTime < 2000) {
+                    comboCount++;
+                    showComboUI();
+                } else {
+                    comboCount = 1;
+                }
+                lastMergeTime = now;
+                
                 const r = grid[to].rank;
                 if (r >= 18) return;
-                if (r === 8 && !gameState.unlockedOfficers) {
-                    if (gameState.currentStage < 9) return showToast("Clear Wave 10 to unlock Officers!");
-                    if (gameState.medals < 50) return showToast("Need 50 Medals to promote to Officer!");
-                    gameState.medals -= 50;
-                    gameState.unlockedOfficers = true; showToast("OFFICER PROMOTIONS UNLOCKED!");
+                
+                // Better Merge Animation: Slide unit from start position to end position
+                const fromTile = mergeGrid.children[from];
+                const toTile = mergeGrid.children[to];
+                const fromRect = fromTile.getBoundingClientRect();
+                const toRect = toTile.getBoundingClientRect();
+                const dx = fromRect.left - toRect.left;
+                const dy = fromRect.top - toRect.top;
+                
+                // Create a temporary element for the slide animation
+                const slideEl = createUnitEl(grid[from]);
+                slideEl.style.position = 'absolute';
+                slideEl.style.left = '0';
+                slideEl.style.top = '0';
+                slideEl.style.width = '100%';
+                slideEl.style.height = '100%';
+                slideEl.style.transform = `translate(${dx}px, ${dy}px)`;
+                slideEl.style.transition = 'transform 0.25s cubic-bezier(0.175, 0.885, 0.32, 1.275)';
+                toTile.appendChild(slideEl);
+                
+                // Clear the 'from' tile immediately
+                grid[from] = null;
+                renderGrid();
+
+                setTimeout(() => {
+                    slideEl.style.transform = 'translate(0, 0) scale(1.2)';
+                    
+                    setTimeout(() => {
+                        slideEl.remove();
+                        const targetUnit = grid[to];
+                        targetUnit.rank++;
+                        
+                        // Add Rank Up Pulse
+                        toTile.classList.add('merge-flash');
+                        setTimeout(() => toTile.classList.remove('merge-flash'), 500);
+                        
+                        // Hidden Elite Merge Chance (5% base, 50% if parents were elite)
+                        if (Math.random() < (wasElite ? 0.5 : 0.05)) {
+                            targetUnit.isElite = true;
+                            showFloatingComboEffect(wasElite ? "ELITE TRAINING!" : "ELITE PROMOTION!", toTile);
+                            if (!wasElite) playSound('battle_victory_sound');
+                        }
+                        
+                        // Military Salute for Officers
+                        if (targetUnit.rank >= 9) {
+                            showFloatingText("SALUTE! 🫡", toTile);
+                        }
+                        
+                        // Promotion Slowdown / Impact
+                        if (targetUnit.rank >= 9 || targetUnit.isElite) {
+                            gameWorld.classList.add('screen-shake');
+                            // Slowdown effect using CSS transition on game speed
+                            const originalTransition = gameWorld.style.transition;
+                            gameWorld.style.transition = 'filter 0.1s';
+                            gameWorld.style.filter = 'contrast(1.5) brightness(1.2)';
+                            
+                            setTimeout(() => {
+                                gameWorld.classList.remove('screen-shake');
+                                gameWorld.style.filter = '';
+                                gameWorld.style.transition = originalTransition;
+                            }, 500);
+                        }
+
+                        if (targetUnit.rank > gameState.highestRank) {
+                            gameState.highestRank = targetUnit.rank;
+                            showPromotionEffect(targetUnit.rank);
+                        }
+                        
+                        // Combo Multiplier
+                        const comboMult = 1 + (comboCount * 0.1);
+                        const gain = targetUnit.rank * 15 * comboMult * (1 + gameState.upgrades.logistics * 0.2 + (gameState.prestigeUpgrades.logistics * 0.5));
+                        gameState.gold += gain;
+                        
+                        trackMission('merge', 1); trackMission('rank', targetUnit.rank);
+                        playSound('merge_sound'); 
+                        animateMerge(to); 
+                        renderGrid(); 
+                        updateUI(); 
+                        saveGame();
+                        
+                        showFloatingText(`+🪙${Math.floor(gain)}`, toTile);
+                        createMergeParticles(toTile);
+                    }, 100);
+                }, 10);
+            }
+
+            function createMergeParticles(parent) {
+                const rect = parent.getBoundingClientRect();
+                for (let i = 0; i < 12; i++) {
+                    const p = document.createElement('div');
+                    p.className = 'particle';
+                    p.style.width = '8px';
+                    p.style.height = '8px';
+                    p.style.backgroundColor = i % 2 === 0 ? '#FFD700' : '#FFF';
+                    p.style.left = (rect.left + rect.width / 2) + 'px';
+                    p.style.top = (rect.top + rect.height / 2) + 'px';
+                    
+                    const angle = Math.random() * Math.PI * 2;
+                    const dist = 30 + Math.random() * 50;
+                    const tx = Math.cos(angle) * dist;
+                    const ty = Math.sin(angle) * dist;
+                    
+                    document.body.appendChild(p);
+                    p.animate([
+                        { transform: 'translate(0, 0) scale(1)', opacity: 1 },
+                        { transform: `translate(${tx}px, ${ty}px) scale(0)`, opacity: 0 }
+                    ], {
+                        duration: 600,
+                        easing: 'cubic-bezier(0, 0, 0.2, 1)'
+                    }).onfinish = () => p.remove();
                 }
-                grid[to].rank++; grid[from] = null;
-                if (grid[to].rank > gameState.highestRank) {
-                    gameState.highestRank = grid[to].rank;
-                    showPromotionEffect(grid[to].rank);
-                }
-                const gain = grid[to].rank * 15 * (1 + gameState.upgrades.logistics * 0.2 + (gameState.prestigeUpgrades.logistics * 0.5));
-                gameState.gold += gain;
-                trackMission('merge', 1); trackMission('rank', grid[to].rank);
-                playSound('merge_sound'); animateMerge(to); renderGrid(); updateUI(); saveGame();
-                showFloatingText(`+🪙${Math.floor(gain)}`, mergeGrid.children[to]);
+            }
+
+            function showComboUI() {
+                const display = document.getElementById('combo-display');
+                const count = document.getElementById('combo-count');
+                const label = document.getElementById('combo-label');
+                
+                display.style.display = 'flex';
+                count.textContent = `${comboCount}x`;
+                
+                clearTimeout(comboTimeout);
+                comboTimeout = setTimeout(() => {
+                    display.style.display = 'none';
+                    comboCount = 0;
+                }, 2000);
+            }
+
+            function showFloatingComboEffect(text, parent) {
+                if (!parent) return;
+                const rect = parent.getBoundingClientRect();
+                const ft = document.createElement('div');
+                ft.className = 'floating-combo-text';
+                ft.textContent = text;
+                ft.style.left = rect.left + rect.width/2 + 'px';
+                ft.style.top = rect.top + 'px';
+                ft.style.fontSize = Math.min(40, 20 + comboCount * 2) + 'px';
+                document.body.appendChild(ft);
+                setTimeout(() => { if(ft) ft.remove(); }, 1000);
             }
 
             function showFloatingText(text, parent) {
+                if (!parent) return;
                 const ft = document.createElement('div');
                 ft.textContent = text;
                 ft.style.position = 'absolute'; ft.style.top = '50%'; ft.style.left = '50%';
@@ -1004,8 +1624,13 @@
                 ft.style.fontWeight = 'bold'; ft.style.fontSize = '24px'; ft.style.pointerEvents = 'none';
                 ft.style.zIndex = '1000'; ft.style.transition = 'all 1s ease-out';
                 parent.appendChild(ft);
-                setTimeout(() => { ft.style.top = '-20%'; ft.style.opacity = '0'; }, 10);
-                setTimeout(() => ft.remove(), 1000);
+                setTimeout(() => { 
+                    if (ft && ft.style) {
+                        ft.style.top = '-20%'; 
+                        ft.style.opacity = '0'; 
+                    }
+                }, 10);
+                setTimeout(() => { if(ft) ft.remove(); }, 1000);
             }
 
             function animateMerge(i) {
@@ -1016,7 +1641,9 @@
 
             // Battle Logic (Expanded)
             function resizeCanvas() {
-                const rect = document.getElementById('battle-canvas-container').getBoundingClientRect();
+                const container = document.getElementById('battle-canvas-container');
+                if (!container || !battleCanvas) return;
+                const rect = container.getBoundingClientRect();
                 battleCanvas.width = rect.width; battleCanvas.height = rect.height;
             }
 
@@ -1024,15 +1651,31 @@
 
             function startBattle() {
                 if (battleActive) return;
-                const deployed = grid.filter(u => u !== null);
-                const cap = 4 + gameState.upgrades.tacticalCapacity;
-                const selected = deployed.slice(0, cap);
-                if (selected.length === 0) return showToast("No units to deploy!");
+                
+                // Filter to ensure all selected indices still contain units
+                const selected = selectedIndices.map(idx => grid[idx]).filter(u => u !== null);
+                
+                if (selected.length === 0) return showToast("Select units to deploy!");
+
+                // Toggle visibility
+                document.getElementById('battle-selection-ui').style.display = 'none';
+                document.getElementById('battle-canvas-container').style.display = 'block';
+                resizeCanvas();
 
                 battleActive = true;
                 battleState = 'PREP';
                 battleStartBtn.textContent = 'ENGAGE ENEMY';
                 battleStartBtn.disabled = false;
+
+                // Wave Modifiers
+                const modifiers = [
+                    { name: "REINFORCED", desc: "Enemies have +50% HP", effect: (e) => e.forEach(en => en.hp *= 1.5) },
+                    { name: "SABOTAGE", desc: "Enemy speed reduced", effect: (e) => e.forEach(en => en.speed *= 0.7) },
+                    { name: "BLIZZARD", desc: "Reduced visibility & speed", effect: (e, p) => p.forEach(u => u.speed *= 0.8) },
+                    { name: "ELITE SQUAD", desc: "Fewer but stronger enemies", effect: (e) => { if(e.length > 1) { e.pop(); e[0].hp *= 2; e[0].atk *= 1.5; e[0].isBoss = true; } } }
+                ];
+                currentWaveModifier = Math.random() < 0.4 ? modifiers[Math.floor(Math.random() * modifiers.length)] : null;
+                if (currentWaveModifier) showToast(`MODIFIER: ${currentWaveModifier.name} - ${currentWaveModifier.desc}`);
 
                 const docBonus = doctrines[gameState.activeDoctrine].bonus;
                 
@@ -1044,29 +1687,40 @@
                     if (gameState.activeDoctrine === 'Army') { hp *= docBonus.hp; }
                     if (gameState.activeDoctrine === 'SpecialForces' && u.rank >= 9) { atk *= docBonus.officerAtk; }
                     
+                    // Scars / Veteran bonus
+                    if (u.battlesSurvived > 5) { hp *= 1.1; atk *= 1.1; }
+                    if (u.battlesSurvived > 20) { hp *= 1.2; atk *= 1.2; }
+
                     return {
-                        ...u, team: 'p', x: 50 + (i % 2) * 80, y: 100 + i * 80,
+                        ...u, team: 'p', x: 50 + (i % 2) * 80, y: 100 + i * 110,
                         hp, maxHp: hp, atk, speed: 10 * cI.multiplier.speed * (gameState.activeDoctrine === 'AirForce' && cI.role === 'harasser' ? docBonus.reconSpeed : 1),
-                        role: cI.role, color: cI.color, assetId: rI.assetId, lastAtk: 0,
+                        role: cI.role, multiplier: cI.multiplier, color: cI.color, assetId: rI.assetId, lastAtk: 0,
                         isDragging: false,
-                        visual: { bob: Math.random() * Math.PI * 2, flash: 0, scale: 1, tilt: 0 }
+                        visual: { bob: Math.random() * Math.PI * 2, flash: 0, scale: 1, tilt: 0, muzzleFlash: 0, recoil: 0, scar: u.battlesSurvived > 5 }
                     };
                 });
 
+                // Reset skills for battle
+                skillCooldowns = { reinforcements: 0, humvee: 0, a10: 0 };
+                updateSkillBar();
+
                 const wave = gameState.currentStage;
+                const prestigeMult = 1 + (gameState.prestigeRank * 0.5);
                 const isBoss = (wave + 1) % 5 === 0;
-                const enemyCount = isBoss ? 1 : 2 + Math.floor(wave / 2);
+                const enemyCount = isBoss ? 1 : 2 + Math.floor(wave / 5); // Fewer enemies but stronger
                 battleEnemies = Array.from({length: enemyCount}, (_, i) => {
-                    const hp = (isBoss ? 1500 : 120) * (wave + 1);
+                    const hp = (isBoss ? 1500 : 120) * (wave + 1) * prestigeMult;
                     const rankForVisual = Math.min(18, 1 + Math.floor(wave / 2));
                     const rI = window.gameConfig.ranks[rankForVisual - 1];
                     return {
                         team: 'e', x: battleCanvas.width - 100, y: 100 + i * 100,
-                        hp, maxHp: hp, atk: (isBoss ? 60 : 20) * (1 + wave * 0.2), speed: 8, color: '#ff4444', isBoss,
-                        assetId: rI.assetId,
-                        visual: { bob: Math.random() * Math.PI * 2, flash: 0, scale: 1, tilt: 0 }
+                        hp, maxHp: hp, atk: (isBoss ? 60 : 20) * (1 + wave * 0.2) * prestigeMult, speed: 8, color: '#ff4444', isBoss,
+                        assetId: rI.assetId, role: 'frontline', lastAtk: 0,
+                        visual: { bob: Math.random() * Math.PI * 2, flash: 0, scale: 1, tilt: 0, muzzleFlash: 0, recoil: 0 }
                     };
                 });
+
+                if (currentWaveModifier) currentWaveModifier.effect(battleEnemies, battleUnits);
 
                 battleProjectiles = [];
                 lastBattleTime = performance.now();
@@ -1103,8 +1757,11 @@
             function applyFormationBonuses() {
                 // Front: x < 150, Middle: 150-250, Back: > 250
                 let frontlineCount = 0;
+                let classCounts = {};
+                
                 battleUnits.forEach(u => {
                     if (u.x < 150) frontlineCount++;
+                    classCounts[u.role] = (classCounts[u.role] || 0) + 1;
                 });
 
                 battleUnits.forEach(u => {
@@ -1118,36 +1775,234 @@
                     if (frontlineCount >= 3) { // Full frontline bonus
                         u.maxHp *= 1.1; u.hp = u.maxHp;
                     }
+                    
+                    // Class Synergy Bonuses
+                    if (classCounts['frontline'] >= 3) u.maxHp *= 1.15; // Infantry Shield Wall
+                    if (classCounts['support'] >= 1 && u.role !== 'support') u.maxHp *= 1.1; // Medic Support
+                    if (classCounts['aura'] >= 1) u.atk *= 1.15; // Officer Command Aura
+                    
+                    u.hp = u.maxHp; // Reset health to new max for battle
                 });
             }
 
-            // Canvas drag for preparation
-            battleCanvas.onmousedown = e => {
+            // Canvas drag for preparation (Touch support added)
+            const handlePrepStart = e => {
                 if (battleState !== 'PREP') return;
                 const rect = battleCanvas.getBoundingClientRect();
-                const x = e.clientX - rect.left; const y = e.clientY - rect.top;
+                const clientX = e.touches ? e.touches[0].clientX : e.clientX;
+                const clientY = e.touches ? e.touches[0].clientY : e.clientY;
+                const x = clientX - rect.left; const y = clientY - rect.top;
                 battleUnits.forEach(u => {
                     if (Math.hypot(u.x - x, u.y - y) < 40) u.isDragging = true;
                 });
             };
-            window.addEventListener('mousemove', e => {
+
+            const handlePrepMove = e => {
+                if (battleState !== 'PREP') return;
                 const rect = battleCanvas.getBoundingClientRect();
-                const x = e.clientX - rect.left; const y = e.clientY - rect.top;
+                const clientX = e.touches ? e.touches[0].clientX : e.clientX;
+                const clientY = e.touches ? e.touches[0].clientY : e.clientY;
+                const x = clientX - rect.left; const y = clientY - rect.top;
                 battleUnits.forEach(u => {
                     if (u.isDragging) {
                         u.x = Math.max(20, Math.min(battleCanvas.width * 0.4, x));
                         u.y = Math.max(20, Math.min(battleCanvas.height - 20, y));
                     }
                 });
-            });
-            window.addEventListener('mouseup', () => {
+                if (e.touches) e.preventDefault();
+            };
+
+            const handlePrepEnd = () => {
                 battleUnits.forEach(u => u.isDragging = false);
-            });
+            };
+
+            battleCanvas.onmousedown = handlePrepStart;
+            battleCanvas.ontouchstart = handlePrepStart;
+            window.addEventListener('mousemove', handlePrepMove);
+            window.addEventListener('touchmove', handlePrepMove, { passive: false });
+            window.addEventListener('mouseup', handlePrepEnd);
+            window.addEventListener('touchend', handlePrepEnd);
+
+            function drawInsigniaOnCanvas(ctx, x, y, size, rankNum) {
+                const colors = { gold: '#FFD700', silver: '#E5E4E2', bronze: '#CD7F32', dark: '#2C3E50' };
+                ctx.save();
+                ctx.translate(x, y);
+                
+                // Draw background badge plate
+                ctx.fillStyle = 'rgba(0,0,0,0.5)';
+                ctx.beginPath();
+                ctx.roundRect(-size/2, -size/2, size, size, 4);
+                ctx.fill();
+                ctx.strokeStyle = 'rgba(255,255,255,0.3)';
+                ctx.lineWidth = 1;
+                ctx.stroke();
+
+                const scale = size / 100;
+                ctx.scale(scale, scale);
+                ctx.translate(-50, -60); // Center the 100x120 insignia logic in the badge
+
+                const chevron = (cy, color) => {
+                    ctx.fillStyle = color;
+                    ctx.beginPath();
+                    ctx.moveTo(10, cy + 20); ctx.lineTo(50, cy); ctx.lineTo(90, cy + 20);
+                    ctx.lineTo(90, cy + 35); ctx.lineTo(50, cy + 15); ctx.lineTo(10, cy + 35);
+                    ctx.closePath(); ctx.fill();
+                };
+
+                const rocker = (ry, color) => {
+                    ctx.fillStyle = color;
+                    ctx.beginPath();
+                    ctx.moveTo(10, ry); ctx.quadraticCurveTo(50, ry + 20, 90, ry);
+                    ctx.lineTo(90, ry + 15); ctx.quadraticCurveTo(50, ry + 35, 10, ry + 15);
+                    ctx.closePath(); ctx.fill();
+                };
+
+                const star = (sx, sy, r, color) => {
+                    ctx.fillStyle = color; ctx.beginPath();
+                    for (let i = 0; i < 5; i++) {
+                        const a = (i * 72 - 90) * Math.PI / 180;
+                        ctx.lineTo(sx + Math.cos(a) * r, sy + Math.sin(a) * r);
+                        const a2 = (i * 72 - 54) * Math.PI / 180;
+                        ctx.lineTo(sx + Math.cos(a2) * r / 2.5, sy + Math.sin(a2) * r / 2.5);
+                    }
+                    ctx.closePath(); ctx.fill();
+                };
+
+                if (rankNum <= 8) {
+                    const c = rankNum >= 4 ? colors.gold : colors.bronze;
+                    if (rankNum === 2) chevron(35, c);
+                    if (rankNum === 3) { chevron(30, c); rocker(60, c); }
+                    if (rankNum >= 4) { chevron(25, c); chevron(45, c); }
+                    if (rankNum >= 5) chevron(5, c);
+                    if (rankNum >= 6) rocker(80, c);
+                    if (rankNum >= 7) rocker(95, c);
+                    if (rankNum >= 8) rocker(110, c);
+                } else if (rankNum <= 11) {
+                    const c = rankNum === 9 ? colors.gold : colors.silver;
+                    ctx.fillStyle = c; ctx.fillRect(40, 20, 20, 60);
+                    if (rankNum >= 10) ctx.fillRect(20, 20, 10, 60);
+                    if (rankNum >= 11) ctx.fillRect(70, 20, 10, 60);
+                } else if (rankNum <= 13) {
+                    const c = rankNum === 12 ? colors.gold : colors.silver;
+                    ctx.fillStyle = c; ctx.beginPath();
+                    ctx.moveTo(50, 20); ctx.quadraticCurveTo(70, 20, 80, 40); ctx.quadraticCurveTo(85, 60, 50, 80);
+                    ctx.quadraticCurveTo(15, 60, 20, 40); ctx.quadraticCurveTo(30, 20, 50, 20);
+                    ctx.fill();
+                } else if (rankNum === 14) {
+                    ctx.fillStyle = colors.silver; ctx.beginPath();
+                    ctx.moveTo(20, 40); ctx.lineTo(30, 30); ctx.lineTo(50, 40); ctx.lineTo(70, 30); ctx.lineTo(80, 40);
+                    ctx.lineTo(70, 70); ctx.lineTo(50, 60); ctx.lineTo(30, 70); ctx.closePath(); ctx.fill();
+                } else {
+                    const numStars = rankNum - 14; const c = colors.silver;
+                    if (numStars === 1) star(50, 50, 30, c);
+                    else if (numStars === 2) { star(30, 50, 20, c); star(70, 50, 20, c); }
+                    else if (numStars === 3) { star(50, 30, 20, c); star(25, 70, 20, c); star(75, 70, 20, c); }
+                    else { star(30, 30, 20, c); star(70, 30, 20, c); star(30, 70, 20, c); star(70, 70, 20, c); }
+                }
+                ctx.restore();
+            }
+
+            function triggerRandomBattleEvent() {
+                const events = [
+                    { name: 'AIRSTRIKE', icon: '✈️', color: '#ff4444', action: () => {
+                        battleEnemies.forEach(e => { e.hp -= 200 * (gameState.currentStage + 1); e.visual.flash = 1; });
+                        showToast("AIRSTRIKE INBOUND!");
+                        gameWorld.classList.add('screen-shake');
+                        setTimeout(() => gameWorld.classList.remove('screen-shake'), 1000);
+                    }},
+                    { name: 'SUPPLY DROP', icon: '📦', color: '#4CAF50', action: () => {
+                        battleUnits.forEach(u => { u.hp = Math.min(u.maxHp, u.hp + u.maxHp * 0.3); u.visual.scale = 1.3; });
+                        showToast("SUPPLY DROP RECEIVED!");
+                    }},
+                    { name: 'MORALE BOOST', icon: '🎺', color: '#FFD700', action: () => {
+                        morale = Math.min(100, morale + 30);
+                        battleUnits.forEach(u => { u.atk *= 1.5; setTimeout(() => u.atk /= 1.5, 5000); });
+                        showToast("MORALE BOOST!");
+                    }},
+                    { name: 'RADIO SILENCE', icon: '🔇', color: '#888', action: () => {
+                        showToast("RADIO INTERFERENCE!");
+                        // Slows down attacks slightly
+                    }}
+                ];
+                const ev = events[Math.floor(Math.random() * events.length)];
+                activeBattleEvent = ev;
+                ev.action();
+                battleEventTimer = 5;
+            }
 
             function drawBattle() {
                 const stage = window.gameConfig.stages[gameState.currentStage % window.gameConfig.stages.length];
                 battleCanvas.style.background = stage.background || '#A8D08D';
                 battleCtx.clearRect(0,0,battleCanvas.width, battleCanvas.height);
+                
+                // Draw Formation Synergy Indicators (Glow between nearby units)
+                battleCtx.save();
+                battleCtx.globalAlpha = 0.4;
+                battleUnits.forEach(u1 => {
+                    battleUnits.forEach(u2 => {
+                        if (u1 === u2) return;
+                        const d = Math.hypot(u1.x - u2.x, u1.y - u2.y);
+                        if (d < 120) {
+                            battleCtx.strokeStyle = '#4CAF50';
+                            battleCtx.lineWidth = 2;
+                            battleCtx.beginPath();
+                            battleCtx.moveTo(u1.x, u1.y);
+                            battleCtx.lineTo(u2.x, u2.y);
+                            battleCtx.stroke();
+                            
+                            // Pulse dot on line
+                            const p = (performance.now() / 1000) % 1;
+                            const px = u1.x + (u2.x - u1.x) * p;
+                            const py = u1.y + (u2.y - u1.y) * p;
+                            battleCtx.fillStyle = '#FFF';
+                            battleCtx.beginPath(); battleCtx.arc(px, py, 3, 0, Math.PI*2); battleCtx.fill();
+                        }
+                    });
+                });
+                battleCtx.restore();
+                const weather = window.gameConfig.stages[gameState.currentStage % window.gameConfig.stages.length].weather || 'CLEAR';
+                
+                // Draw Terrain Features
+                const seed = gameState.currentStage;
+                const rng = (i) => {
+                    let val = Math.sin(seed * 1000 + i * 500) * 10000;
+                    return val - Math.floor(val);
+                };
+                
+                const features = 15;
+                const terrainColors = {
+                    '#A8D08D': { p: '#8BB374', s: '#967E5D', type: 'blob' }, // Training
+                    '#E2C08D': { p: '#C9A66F', s: '#8B7D6B', type: 'blob' }, // Desert
+                    '#FFFFFF': { p: '#E0E0E0', s: '#B0C4DE', type: 'blob' }, // Snow
+                    '#808080': { p: '#505050', s: '#303030', type: 'rect' }, // City
+                    '#404040': { p: '#202020', s: '#101010', type: 'rect' }  // Warzone
+                };
+                const theme = terrainColors[stage.background] || terrainColors['#A8D08D'];
+                
+                for (let i = 0; i < features; i++) {
+                    const tx = rng(i) * battleCanvas.width;
+                    const ty = rng(i + 1) * battleCanvas.height;
+                    const tsize = 40 + rng(i + 2) * 80;
+                    battleCtx.fillStyle = i % 3 === 0 ? theme.s : theme.p;
+                    battleCtx.globalAlpha = 0.3;
+                    battleCtx.beginPath();
+                    if (theme.type === 'rect') {
+                        battleCtx.rect(tx - tsize/2, ty - tsize/4, tsize, tsize * 0.5);
+                    } else {
+                        battleCtx.ellipse(tx, ty, tsize, tsize * 0.6, rng(i+3) * Math.PI, 0, Math.PI * 2);
+                    }
+                    battleCtx.fill();
+                    
+                    // Add some detail dots/grass
+                    if (i % 2 === 0) {
+                        battleCtx.globalAlpha = 0.2;
+                        battleCtx.fillStyle = '#000';
+                        battleCtx.beginPath();
+                        battleCtx.arc(tx + rng(i+4)*20, ty + rng(i+5)*20, 2, 0, Math.PI*2);
+                        battleCtx.fill();
+                    }
+                }
+                battleCtx.globalAlpha = 1.0;
                 
                 // Draw Grid
                 battleCtx.strokeStyle = 'rgba(255,255,255,0.1)';
@@ -1158,10 +2013,17 @@
 
                 [...battleUnits, ...battleEnemies].forEach(u => {
                     // Shadow
-                    battleCtx.fillStyle = 'rgba(0,0,0,0.2)';
+                    battleCtx.fillStyle = 'rgba(0,0,0,0.15)';
+                    battleCtx.beginPath();
+                    battleCtx.ellipse(u.x, u.y + 20, 30, 12, 0, 0, Math.PI * 2);
+                    battleCtx.fill();
+
+                    // Team Indicator Ring
+                    battleCtx.strokeStyle = u.team === 'p' ? 'rgba(76, 175, 80, 0.6)' : 'rgba(244, 67, 54, 0.6)';
+                    battleCtx.lineWidth = 3;
                     battleCtx.beginPath();
                     battleCtx.ellipse(u.x, u.y + 20, 25, 10, 0, 0, Math.PI * 2);
-                    battleCtx.fill();
+                    battleCtx.stroke();
 
                     // Aura for Officers/Generals
                     if (u.team === 'p' && u.rank >= 5) {
@@ -1172,7 +2034,10 @@
 
                     // Character Drawing
                     battleCtx.save();
-                    battleCtx.translate(u.x, u.y);
+                    
+                    // Apply Recoil (move away from target)
+                    const recoilX = u.team === 'p' ? -u.visual.recoil : u.visual.recoil;
+                    battleCtx.translate(u.x + recoilX, u.y);
                     
                     // Bobbing and Tilt
                     const bobY = Math.sin(u.visual.bob) * 5;
@@ -1188,13 +2053,72 @@
                         battleCtx.filter = `brightness(${1 + u.visual.flash * 5}) saturate(${1 - u.visual.flash})`;
                     }
 
+                    // Shell Casings
+                    if (u.visual.muzzleFlash > 0.8 && u.role !== 'support') {
+                        battleProjectiles.push({ 
+                            type: 'shell', 
+                            x: u.x, y: u.y, 
+                            vx: (u.team === 'p' ? -1 : 1) * (200 + Math.random() * 100), 
+                            vy: -150 - Math.random() * 100,
+                            life: 1.0
+                        });
+                    }
+                    
+                    const size = u.isBoss ? 100 : 70;
+                    
+                    // Elite Aura in Battle
+                    if (u.isElite) {
+                        battleCtx.save();
+                        battleCtx.globalAlpha = 0.4;
+                        battleCtx.shadowBlur = 20;
+                        battleCtx.shadowColor = '#FFD700';
+                        battleCtx.strokeStyle = '#FFD700';
+                        battleCtx.lineWidth = 4;
+                        battleCtx.beginPath();
+                        battleCtx.arc(0, 0, size/2 + 5, 0, Math.PI * 2);
+                        battleCtx.stroke();
+                        battleCtx.restore();
+                    }
+
                     if (u.assetId && assetCache[u.assetId]) {
-                        const size = u.isBoss ? 100 : 70;
                         battleCtx.drawImage(assetCache[u.assetId].img, -size/2, -size/2, size, size);
                     } else {
                         // Fallback
                         battleCtx.fillStyle = u.color;
                         battleCtx.beginPath(); battleCtx.arc(0, 0, u.isBoss ? 40 : 25, 0, Math.PI*2); battleCtx.fill();
+                    }
+
+                    // DRAW RIFLE / WEAPON
+                    if (u.role !== 'support') {
+                        battleCtx.save();
+                        battleCtx.translate(size/4, 0); // Position rifle in front
+                        battleCtx.fillStyle = '#333';
+                        // Stock
+                        battleCtx.fillRect(-15, 0, 15, 6);
+                        // Body
+                        battleCtx.fillRect(0, -2, 25, 8);
+                        // Barrel
+                        battleCtx.fillRect(25, -1, 15, 4);
+                        // Magazine
+                        battleCtx.fillRect(5, 5, 5, 8);
+                        battleCtx.restore();
+                    }
+
+                    // DRAW MUZZLE FLASH
+                    if (u.visual.muzzleFlash > 0) {
+                        battleCtx.save();
+                        battleCtx.translate(size/2 + 20, 0);
+                        battleCtx.globalAlpha = u.visual.muzzleFlash;
+                        battleCtx.fillStyle = '#FFD700';
+                        for(let i=0; i<6; i++) {
+                            battleCtx.rotate(Math.PI/3);
+                            battleCtx.beginPath();
+                            battleCtx.moveTo(0,0);
+                            battleCtx.lineTo(20 * u.visual.muzzleFlash, 5 * u.visual.muzzleFlash);
+                            battleCtx.lineTo(0, 10 * u.visual.muzzleFlash);
+                            battleCtx.fill();
+                        }
+                        battleCtx.restore();
                     }
 
                     battleCtx.restore();
@@ -1205,12 +2129,45 @@
                     battleCtx.fillRect(u.x-30, u.y-60, 60 * (u.hp/u.maxHp), 8);
 
                     if (u.team === 'p') {
-                        battleCtx.fillStyle = 'white'; battleCtx.font = 'bold 12px Inter'; battleCtx.textAlign = 'center';
-                        battleCtx.fillText(u.rank, u.x, u.y - 70);
+                        drawInsigniaOnCanvas(battleCtx, u.x, u.y - 85, 26, u.rank);
+                        
+                        // Visual Scars on Canvas
+                        if (u.visual.scar) {
+                            battleCtx.strokeStyle = 'rgba(255,0,0,0.4)';
+                            battleCtx.lineWidth = 2;
+                            battleCtx.beginPath();
+                            battleCtx.moveTo(u.x - 15, u.y - 10);
+                            battleCtx.lineTo(u.x - 5, u.y);
+                            battleCtx.stroke();
+                        }
                     }
                 });
 
+                // Draw Weather Overlays
+                const stageWeather = stage.weather || 'CLEAR';
+                if (stageWeather === 'RAIN') {
+                    battleCtx.strokeStyle = 'rgba(174,194,224,0.5)';
+                    battleCtx.lineWidth = 1;
+                    for(let i=0; i<20; i++) {
+                        const rx = (performance.now() * 0.5 + i * 50) % battleCanvas.width;
+                        const ry = (performance.now() * 0.8 + i * 80) % battleCanvas.height;
+                        battleCtx.beginPath(); battleCtx.moveTo(rx, ry); battleCtx.lineTo(rx-5, ry+10); battleCtx.stroke();
+                    }
+                } else if (stageWeather === 'FOG') {
+                    battleCtx.fillStyle = 'rgba(255,255,255,0.2)';
+                    battleCtx.fillRect(0,0,battleCanvas.width, battleCanvas.height);
+                }
+
                 battleProjectiles.forEach(p => {
+                    if (p.type === 'shell') {
+                        battleCtx.fillStyle = '#DAA520';
+                        battleCtx.save();
+                        battleCtx.translate(p.x, p.y);
+                        battleCtx.rotate(performance.now() / 100);
+                        battleCtx.fillRect(-3, -1, 6, 2);
+                        battleCtx.restore();
+                        return;
+                    }
                     battleCtx.fillStyle = p.color; battleCtx.beginPath(); battleCtx.arc(p.x, p.y, 6, 0, Math.PI*2); battleCtx.fill();
                     // Tail
                     battleCtx.strokeStyle = p.color;
@@ -1224,7 +2181,7 @@
 
                 battleFloatingTexts.forEach(ft => {
                     battleCtx.fillStyle = ft.color || 'white';
-                    battleCtx.font = 'bold 24px Inter';
+                    battleCtx.font = `bold ${ft.size || 24}px Inter`;
                     battleCtx.textAlign = 'center';
                     battleCtx.globalAlpha = ft.life;
                     battleCtx.fillText(ft.text, ft.x, ft.y);
@@ -1252,10 +2209,41 @@
             let battleFloatingTexts = [];
 
             function updateBattle(dt) {
+                // Update Skill Cooldowns
+                if (battleState === 'FIGHTING') {
+                    let changed = false;
+                    Object.keys(skillCooldowns).forEach(k => {
+                        if (skillCooldowns[k] > 0) {
+                            const old = skillCooldowns[k];
+                            skillCooldowns[k] = Math.max(0, skillCooldowns[k] - dt);
+                            if (skillCooldowns[k] <= 0 && old > 0) {
+                                playSound('skill_cooldown_sound');
+                                changed = true;
+                            }
+                        }
+                    });
+                    if (changed || Math.floor(Date.now()/1000) % 2 === 0) updateSkillBar(); 
+                }
+
+                // Weather Effects Logic
+                battleEventTimer -= dt;
+                if (battleActive && battleState === 'FIGHTING' && battleEventTimer <= 0) {
+                    if (activeBattleEvent) {
+                        activeBattleEvent = null;
+                        battleEventTimer = 10 + Math.random() * 10;
+                    } else if (Math.random() < 0.3) {
+                        triggerRandomBattleEvent();
+                    } else {
+                        battleEventTimer = 5;
+                    }
+                }
+
                 [...battleUnits, ...battleEnemies].forEach(u => {
                     // Update visual state
                     u.visual.bob += dt * 10;
                     u.visual.flash = Math.max(0, u.visual.flash - dt * 5);
+                    u.visual.muzzleFlash = Math.max(0, u.visual.muzzleFlash - dt * 8);
+                    u.visual.recoil *= 0.8;
                     u.visual.scale = 1 + (u.visual.scale - 1) * 0.9;
                     u.visual.tilt *= 0.9;
 
@@ -1279,7 +2267,30 @@
                     if (u.role === 'dps') target = targets.reduce((min, cur) => cur.hp < min.hp ? cur : min, targets[0]);
 
                     const dist = Math.hypot(target.x - u.x, target.y - u.y);
-                    const range = u.role === 'dps' ? 350 : (u.role === 'aoe' ? 250 : 100);
+                    
+                    // Improved range logic based on roles and multipliers
+                    let baseRange = 160;
+                    if (u.role === 'dps') baseRange = 450;
+                    else if (u.role === 'aoe') baseRange = 350;
+                    else if (u.role === 'harasser') baseRange = 240;
+                    else if (u.role === 'support') baseRange = 220;
+                    else if (u.role === 'aura') baseRange = 200;
+                    
+                    const rangeMult = u.multiplier?.range || 1;
+                    const range = baseRange * rangeMult;
+
+                    // Ally separation to prevent units from stacking on top of each other
+                    allies.forEach(other => {
+                        if (u === other) return;
+                        const d = Math.hypot(u.x - other.x, u.y - other.y);
+                        const minSeparation = 75; // Slightly larger than sprite size
+                        if (d < minSeparation) {
+                            const angle = Math.atan2(u.y - other.y, u.x - other.x);
+                            const push = (minSeparation - d) * dt * 40;
+                            u.x += Math.cos(angle) * push;
+                            u.y += Math.sin(angle) * push;
+                        }
+                    });
 
                     if (dist > range) {
                         const angle = Math.atan2(target.y - u.y, target.x - u.x);
@@ -1288,7 +2299,9 @@
                         u.visual.tilt = Math.sin(performance.now() / 100) * 0.2;
                     } else if (performance.now() - u.lastAtk > 1000 / (u.team === 'p' && gameState.activeDoctrine === 'Marines' ? 1.25 : 1)) {
                         u.lastAtk = performance.now();
-                        u.visual.scale = 1.3;
+                        u.visual.recoil = 12;
+                        u.visual.muzzleFlash = 1.0;
+                        u.visual.scale = 1.1;
                         let finalDmg = u.atk;
                         if (u.team === 'p') {
                             if (u.role === 'frontline' && target.role === 'harasser') finalDmg *= 1.5;
@@ -1301,15 +2314,32 @@
 
                 for (let i = battleProjectiles.length - 1; i >= 0; i--) {
                     const p = battleProjectiles[i];
+                    if (p.type === 'shell') {
+                        p.x += p.vx * dt;
+                        p.y += p.vy * dt;
+                        p.vy += 500 * dt; // Gravity
+                        p.life -= dt;
+                        if (p.life <= 0 || p.y > battleCanvas.height) battleProjectiles.splice(i, 1);
+                        continue;
+                    }
                     const dist = Math.hypot(p.target.x - p.x, p.target.y - p.y);
                     if (dist < 20) {
                         if (p.isSplash) {
                             const targets = p.target.team === 'p' ? battleUnits : battleEnemies;
+                            // Explosion effect
+                            for (let j = 0; j < 8; j++) {
+                                battleFloatingTexts.push({ 
+                                    x: p.x + (Math.random()-0.5)*40, 
+                                    y: p.y + (Math.random()-0.5)*40, 
+                                    text: '💥', life: 0.5, size: 20 
+                                });
+                            }
                             targets.forEach(t => { 
                                 if (Math.hypot(t.x - p.x, t.y - p.y) < 80) {
                                     t.hp -= p.dmg;
                                     t.visual.flash = 1;
-                                    t.visual.tilt = (Math.random() - 0.5) * 0.5;
+                                    t.visual.tilt = (Math.random() - 0.5) * 0.8;
+                                    t.visual.recoil = 20;
                                     battleFloatingTexts.push({ x: t.x, y: t.y, text: `-${Math.floor(p.dmg)}`, life: 1, color: '#ff4444' });
                                 }
                             });
@@ -1317,6 +2347,7 @@
                             p.target.hp -= p.dmg;
                             p.target.visual.flash = 1;
                             p.target.visual.tilt = (Math.random() - 0.5) * 0.5;
+                            p.target.visual.recoil = 10;
                             battleFloatingTexts.push({ x: p.target.x, y: p.target.y, text: `-${Math.floor(p.dmg)}`, life: 1, color: '#ff4444' });
                         }
                         battleProjectiles.splice(i, 1);
@@ -1341,15 +2372,31 @@
             function endBattle(win) {
                 battleActive = false; battleState = 'PREP'; 
                 battleStartBtn.disabled = false; battleStartBtn.textContent = 'DEPLOY & BATTLE';
+                activeBattleEvent = null;
+
+                // Reset battle UI for next selection
+                const selectionUI = document.getElementById('battle-selection-ui');
+                const canvasContainer = document.getElementById('battle-canvas-container');
+                if (selectionUI) selectionUI.style.display = 'flex';
+                if (canvasContainer) canvasContainer.style.display = 'none';
+                renderSelectionGrid();
+
                 if (win) {
                     const g = (gameState.currentStage + 1) * 100;
                     gameState.gold += g; gameState.medals += (gameState.currentStage + 1) % 5 === 0 ? 5 : 1;
+                    
+                    // Increment battles survived for units in the grid
+                    const deployedCount = 4 + gameState.upgrades.tacticalCapacity;
+                    for (let i=0; i < grid.length; i++) {
+                        if (grid[i]) grid[i].battlesSurvived = (grid[i].battlesSurvived || 0) + 1;
+                    }
+
                     gameState.currentStage++; playSound('battle_victory_sound');
                     showToast(`VICTORY! +🪙${g}`); trackMission('battle', 1);
                     // Submit to leaderboard after victory
                     submitToLeaderboard();
                 } else showToast("DEFEAT! Regroup and upgrade.");
-                updateUI(); saveGame();
+                updateUI(); renderGrid(); saveGame();
             }
 
             // Upgrades & Missions
@@ -1360,10 +2407,21 @@
                     const cost = Math.floor(u.baseCost * Math.pow(u.growth, lvl));
                     const card = document.createElement('div');
                     card.className = 'upgrade-card';
+                    
+                    const descriptions = {
+                        'spawnTraining': 'Increases the starting rank of newly spawned recruits.',
+                        'combatTraining': 'Boosts unit damage by 10% per level.',
+                        'logistics': 'Earn 20% more gold from each successful merge.',
+                        'medicalSupport': 'Increases unit HP by 10% per level.',
+                        'tacticalCapacity': 'Allows deploying 1 additional unit into battle per level.'
+                    };
+                    const desc = descriptions[u.key] || 'Improves your military operations.';
+
                     card.innerHTML = `<div class="card-icon">⭐</div>
                         <div class="card-details">
                             <div class="card-title">${u.name}</div>
                             <div class="card-sub">Level ${lvl}</div>
+                            <p style="font-size: 12px; color: #666; margin: 4px 0;">${desc}</p>
                             <div class="card-price">🪙 ${cost}</div>
                         </div>
                         <button class="card-btn" ${gameState.gold < cost ? 'disabled' : ''}>UPGRADE</button>`;
@@ -1422,7 +2480,7 @@
                 setTimeout(() => {
                     overlay.style.opacity = '0'; overlay.style.transition = '0.5s';
                     setTimeout(() => overlay.remove(), 500);
-                }, 3000);
+                }, 2000);
             }
 
             function trackMission(type, val) {
@@ -1459,10 +2517,18 @@
                     const cost = (lvl + 1) * 2;
                     const card = document.createElement('div');
                     card.className = 'upgrade-card';
+                    
+                    const pDesc = {
+                        'tactics': 'Master elite combat maneuvers to crush enemies faster.',
+                        'logistics': 'Establish global supply lines to maximize wealth generation.',
+                        'command': 'Project authority further, providing buffs to a larger area of troops.'
+                    }[u.key] || '';
+
                     card.innerHTML = `<div class="card-icon">${u.icon}</div>
                         <div class="card-details">
                             <div class="card-title">${u.name}</div>
                             <div class="card-sub">Lvl ${lvl} | ${u.desc}</div>
+                            <p style="font-size: 12px; color: #666; margin: 4px 0;">${pDesc}</p>
                             <div class="card-price">⭐ ${cost} Points</div>
                         </div>
                         <button class="card-btn" ${gameState.prestigeCurrency < cost ? 'disabled' : ''}>BUY</button>`;
@@ -1481,7 +2547,18 @@
                 Object.values(doctrines).forEach(d => {
                     const card = document.createElement('div');
                     card.className = 'doctrine-card' + (gameState.activeDoctrine === d.name.replace(' ', '') ? ' active' : '');
-                    card.innerHTML = `<h3 style="color:${d.color}">${d.name}</h3><p>${d.desc}</p>`;
+                    
+                    const doctrineDetail = {
+                        'Army': 'The backbone of the force. Focused on survivability and steady morale.',
+                        'AirForce': 'Mastery of the skies. Increases critical strike chance and recon speed.',
+                        'Navy': 'Fortified positions and maritime supply. Boosts defense and healing capabilities.',
+                        'Marines': 'Rapid response and high aggression. Significantly increases attack speed.',
+                        'SpecialForces': 'Elite tactical operations. Gives massive power boosts to high-ranking officers.'
+                    }[d.name.replace(' ', '')] || '';
+
+                    card.innerHTML = `<h3 style="color:${d.color}">${d.name}</h3>
+                                     <p style="font-weight: bold; margin-bottom: 5px;">${d.desc}</p>
+                                     <p style="font-size: 12px; color: #666;">${doctrineDetail}</p>`;
                     card.onclick = () => {
                         gameState.activeDoctrine = d.name.replace(' ', '');
                         renderDoctrines(); showToast(`Doctrine: ${d.name} Activated!`); saveGame();
@@ -1490,8 +2567,15 @@
                 });
             }
 
+            const legacyNames = [
+                "Iron Division", "Ghost Battalion", "Desert Wolves", "Last Stand Regiment",
+                "Thunder Brigade", "Storm Regiment", "Vanguard Force", "Steel Tigers",
+                "Black Watch", "Imperial Guard", "Silent Stalkers", "Crimson Eagles"
+            ];
+
             prestigeBtn.onclick = () => {
                 if (gameState.highestRank < 14) return;
+                const legacyName = legacyNames[Math.floor(Math.random() * legacyNames.length)];
                 const points = Math.floor(gameState.highestRank / 2);
                 gameState.prestigeRank++;
                 gameState.prestigeCurrency += points;
@@ -1499,7 +2583,8 @@
                 gameState.currentStage = 0; gameState.unlockedOfficers = false;
                 grid = new Array(25).fill(null);
                 Object.keys(gameState.upgrades).forEach(k => gameState.upgrades[k] = 0);
-                showToast(`VETERAN PROMOTION! +${points} Stars`);
+                
+                showToast(`LEGACY CREATED: The ${legacyName}! +${points} Stars`);
                 updateUI(); renderGrid(); renderPrestige(); saveGame();
                 // Submit to leaderboard after prestige
                 submitToLeaderboard();
@@ -1508,7 +2593,7 @@
             // Dragging
             function startDrag(idx, x, y, id) {
                 if (mode !== 'play') return;
-                isDragging = true; touchId = id; draggedFrom = idx;
+                isDragging = true; touchId = id; draggedFrom = parseInt(idx);
                 draggedEl = document.createElement('div');
                 draggedEl.className = 'dragged-unit';
                 draggedEl.appendChild(createUnitEl(grid[idx]));
@@ -1536,22 +2621,45 @@
                     startBackgroundMusic();
                     const v = nav.dataset.view;
                     document.querySelectorAll('.view, .nav-item').forEach(el => el.classList.remove('active'));
-                    nav.classList.add('active'); document.getElementById(`view-${v}`).classList.add('active');
+                    const viewEl = document.getElementById(`view-${v}`);
+                    if (viewEl) {
+                        nav.classList.add('active');
+                        viewEl.classList.add('active');
+                    } else {
+                        lib.log(`Warning: View view-${v} not found`);
+                    }
                     currentView = v; playSound('button_click_sound');
                     if (v === 'upgrades') renderUpgrades();
                     if (v === 'missions') renderMissions();
                     if (v === 'prestige') renderPrestige();
                     if (v === 'doctrine') renderDoctrines();
                     if (v === 'battle') {
-                        resizeCanvas();
                         if (!battleActive) {
+                            const selectionUI = document.getElementById('battle-selection-ui');
+                            const canvasContainer = document.getElementById('battle-canvas-container');
+                            if (selectionUI) selectionUI.style.display = 'flex';
+                            if (canvasContainer) canvasContainer.style.display = 'none';
                             battleStartBtn.textContent = 'DEPLOY & BATTLE';
                             battleStartBtn.disabled = false;
+                            renderSelectionGrid();
+                        } else {
+                            const selectionUI = document.getElementById('battle-selection-ui');
+                            const canvasContainer = document.getElementById('battle-canvas-container');
+                            if (selectionUI) selectionUI.style.display = 'none';
+                            if (canvasContainer) canvasContainer.style.display = 'block';
+                            resizeCanvas();
                         }
                     }
                     if (v === 'leaderboard') loadLeaderboard();
                 };
             });
+
+            document.getElementById('music-toggle-button').onclick = () => {
+                toggleMusic();
+                const btn = document.getElementById('music-toggle-button');
+                btn.textContent = isMusicPlaying ? '🎵' : '🔇';
+                btn.style.opacity = isMusicPlaying ? '1' : '0.5';
+            };
 
             spawnButton.onclick = () => { initAudio(); spawnUnit(); };
             document.getElementById('settings-button').onclick = () => document.getElementById('settings-modal').classList.add('active');
@@ -1561,10 +2669,10 @@
             document.getElementById('reset-confirm-yes').onclick = resetGame;
             document.getElementById('refresh-leaderboard').onclick = () => { playSound('button_click_sound'); loadLeaderboard(); };
 
-            mergeGrid.onmousedown = e => { const t = e.target.closest('.grid-tile'); if (t && grid[t.dataset.index]) startDrag(t.dataset.index, e.clientX, e.clientY, null); };
+            mergeGrid.onmousedown = e => { const t = e.target.closest('.grid-tile'); if (t && grid[t.dataset.index]) startDrag(parseInt(t.dataset.index), e.clientX, e.clientY, null); };
             window.onmousemove = e => moveDrag(e.clientX, e.clientY);
             window.onmouseup = e => endDrag(e.clientX, e.clientY);
-            mergeGrid.ontouchstart = e => { const t = e.target.closest('.grid-tile'); if (t && grid[t.dataset.index]) startDrag(t.dataset.index, e.touches[0].clientX, e.touches[0].clientY, e.touches[0].identifier); };
+            mergeGrid.ontouchstart = e => { const t = e.target.closest('.grid-tile'); if (t && grid[t.dataset.index]) startDrag(parseInt(t.dataset.index), e.touches[0].clientX, e.touches[0].clientY, e.touches[0].identifier); };
             window.ontouchmove = e => { const t = Array.from(e.touches).find(t => t.identifier === touchId); if (t) moveDrag(t.clientX, t.clientY); };
             window.ontouchend = e => { const t = Array.from(e.changedTouches).find(t => t.identifier === touchId); if (t) endDrag(t.clientX, t.clientY); };
 

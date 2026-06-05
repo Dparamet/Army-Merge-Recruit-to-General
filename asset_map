@@ -82,7 +82,7 @@ const assets = {
     "type": "audio"
   },
   "spawn_sound": {
-    "url": "https://d2oir5eh8rty2e.cloudfront.net/assets/sounds/effect/spawn_sound_2c07ea98-5e56-49ef-9812-d41cc53eadeb.mp3",
+    "url": "https://d2oir5eh8rty2e.cloudfront.net/assets/sounds/effect/spawn_sound_031c4d5b-531d-48e3-bab6-005001ecc535.mp3",
     "type": "audio"
   },
   "battle_victory_sound": {
@@ -207,6 +207,30 @@ const assets = {
   },
   "lofi_background_music": {
     "url": "https://d2oir5eh8rty2e.cloudfront.net/assets/sounds/effect/lofi_background_music_33998dd5-61ad-4a2d-8e0d-d67908fe6ac3.mp3",
+    "type": "audio"
+  },
+  "humvee_icon": {
+    "url": "https://d2oir5eh8rty2e.cloudfront.net/assets/images/humvee_icon_6a2f41d7-7dec-476e-8614-f7e369621491.webp",
+    "type": "image",
+    "aspect_ratio": [
+      959,
+      691
+    ]
+  },
+  "a10_icon": {
+    "url": "https://d2oir5eh8rty2e.cloudfront.net/assets/images/a10_icon_811d4b71-fac5-48ca-a2dc-8cfe68ecfa59.webp",
+    "type": "image",
+    "aspect_ratio": [
+      1195,
+      763
+    ]
+  },
+  "skill_cooldown_sound": {
+    "url": "https://d2oir5eh8rty2e.cloudfront.net/assets/sounds/effect/skill_cooldown_sound_2383218c-db28-471b-a073-d487de4de4dd.mp3",
+    "type": "audio"
+  },
+  "a10_strike_sound": {
+    "url": "https://d2oir5eh8rty2e.cloudfront.net/assets/sounds/effect/a10_strike_sound_20b405e0-ab70-46e1-8c77-ba44866f9f07.mp3",
     "type": "audio"
   }
 };
