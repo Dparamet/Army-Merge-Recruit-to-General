@@ -42,6 +42,9 @@
             --medal-color: #B2BEB5; /* Ash Gray */
             --ui-panel: rgba(255, 255, 255, 0.85);
             --combo-color: #FF4500;
+            --attack-red: #E74C3C;
+            --defense-blue: #3498DB;
+            --economy-yellow: #F1C40F;
         }
 
         @keyframes breathe {
@@ -579,6 +582,37 @@
 
         .settings-button { position: absolute; top: var(--space-sm); right: var(--space-sm); width: 50px; height: 50px; background: rgba(255,255,255,0.8); border: none; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 24px; z-index: 30; }
         .edit-mode-indicator { position: absolute; top: 10px; left: 50%; transform: translateX(-50%); background: #ffc107; padding: 5px 20px; border-radius: 20px; font-weight: 800; z-index: 1000; display: none; }
+        
+        /* Save Indicator */
+        #save-indicator {
+            position: fixed;
+            top: 20px;
+            right: 120px;
+            background: rgba(76, 175, 80, 0.9);
+            color: white;
+            padding: 8px 16px;
+            border-radius: 20px;
+            font-weight: 700;
+            font-size: 14px;
+            z-index: 100;
+            display: none;
+            pointer-events: none;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.2);
+            transition: opacity 0.3s;
+        }
+        #save-indicator.saving {
+            background: rgba(255, 152, 0, 0.9);
+        }
+        #save-indicator.error {
+            background: rgba(244, 67, 54, 0.9);
+        }
+        @keyframes saveSuccess {
+            0% { opacity: 0; transform: translateY(-10px); }
+            10% { opacity: 1; transform: translateY(0); }
+            90% { opacity: 1; transform: translateY(0); }
+            100% { opacity: 0; transform: translateY(-10px); }
+        }
+        
         /* Toast Notification */
         #toast {
             position: fixed;
@@ -673,6 +707,7 @@
 <body>
     <div id="game-world">
         <div id="toast">Message</div>
+        <div id="save-indicator">💾 Saved</div>
         <!-- Edit Mode Indicator -->
         <div class="edit-mode-indicator" id="edit-indicator">EDIT MODE</div>
 
@@ -685,6 +720,7 @@
             <div class="currency-bar">
                 <div class="currency-item">🪙 <span id="gold-count">0</span></div>
                 <div class="currency-item">🏅 <span id="medal-count">0</span></div>
+                <div class="currency-item">⭐ <span id="skill-points-count">0</span></div>
             </div>
             <div class="stage-info" id="stage-display">Stage 1: Training Camp</div>
             <div class="progress-bar">
@@ -770,6 +806,27 @@
                     <div style="text-align: center; padding: 20px; color: #666;">Loading leaderboard...</div>
                 </div>
             </div>
+
+            <div class="view" id="view-skills">
+                <div class="modal-header">Skill Tree</div>
+                <div style="text-align: center; padding: 10px; color: var(--text-dark); font-weight: 800;">
+                    Available Skill Points: ⭐ <span id="sp-display">0</span>
+                </div>
+                <div class="scroll-view" id="skill-tree-content">
+                    <div class="skill-branch" style="border-left: 5px solid var(--attack-red); padding-left: 15px; margin-bottom: 20px;">
+                        <h2 style="color: var(--attack-red); font-family: 'Fredoka';">🔴 ATTACK</h2>
+                        <div id="attack-skills"></div>
+                    </div>
+                    <div class="skill-branch" style="border-left: 5px solid var(--defense-blue); padding-left: 15px; margin-bottom: 20px;">
+                        <h2 style="color: var(--defense-blue); font-family: 'Fredoka';">🔵 DEFENSE</h2>
+                        <div id="defense-skills"></div>
+                    </div>
+                    <div class="skill-branch" style="border-left: 5px solid var(--economy-yellow); padding-left: 15px; margin-bottom: 20px;">
+                        <h2 style="color: var(--economy-yellow); font-family: 'Fredoka';">🟡 ECONOMY</h2>
+                        <div id="economy-skills"></div>
+                    </div>
+                </div>
+            </div>
         </div>
 
         <!-- Bottom Navigation -->
@@ -785,6 +842,10 @@
             <div class="nav-item" data-view="upgrades">
                 <div class="nav-icon">🔝</div>
                 <div class="nav-label">Upgrades</div>
+            </div>
+            <div class="nav-item" data-view="skills">
+                <div class="nav-icon">🌳</div>
+                <div class="nav-label">Skills</div>
             </div>
             <div class="nav-item" data-view="prestige">
                 <div class="nav-icon">🎖️</div>
@@ -803,6 +864,7 @@
         <div class="modal-overlay" id="settings-modal">
             <div class="modal">
                 <div class="modal-header">Settings</div>
+                <button class="modal-btn primary" id="manual-save-button">💾 Save Now</button>
                 <button class="modal-btn primary" id="reset-button">Reset Progress</button>
                 <button class="modal-btn secondary" id="settings-close">Close</button>
             </div>
@@ -864,6 +926,12 @@
                 humvee: 0,
                 a10: 0
             };
+            
+            // Save state management
+            const SAVE_VERSION = 2; // Increment when save format changes
+            let autoSaveInterval = null;
+            let lastSaveTime = 0;
+            let isSaving = false;
 
             function updateSkillBar() {
                 const bar = document.getElementById('skill-bar');
@@ -935,12 +1003,30 @@
             let gameState = {
                 gold: 100,
                 medals: 0,
+                skillPoints: 0,
                 highestRank: 1,
                 currentStage: 0,
                 unlockedOfficers: false,
                 prestigeRank: 0,
                 prestigeCurrency: 0,
                 activeDoctrine: 'Army', // Army, AirForce, Navy, Marines, SpecialForces
+                skillTree: {
+                    atk_power: 0,
+                    atk_speed: 0,
+                    atk_crit: 0,
+                    atk_combined: 0,
+                    atk_range: 0,
+                    def_hp: 0,
+                    def_armor: 0,
+                    def_healing: 0,
+                    def_eod: 0,
+                    def_dodge: 0,
+                    eco_gold: 0,
+                    eco_spawn: 0,
+                    eco_discount: 0,
+                    eco_salvage: 0,
+                    eco_missions: 0
+                },
                 upgrades: {
                     spawnTraining: 0,
                     combatTraining: 0,
@@ -1073,29 +1159,93 @@
                 }
             }
 
-            async function saveGame() {
+            function showSaveIndicator(status = 'success', message = '💾 Saved') {
+                const indicator = document.getElementById('save-indicator');
+                if (!indicator) return;
+                
+                indicator.className = '';
+                if (status === 'saving') {
+                    indicator.className = 'saving';
+                    indicator.textContent = '💾 Saving...';
+                } else if (status === 'error') {
+                    indicator.className = 'error';
+                    indicator.textContent = '⚠️ Save Failed';
+                } else {
+                    indicator.textContent = message;
+                }
+                
+                indicator.style.display = 'block';
+                indicator.style.animation = 'saveSuccess 2s';
+                
+                setTimeout(() => {
+                    indicator.style.display = 'none';
+                }, 2000);
+            }
+            
+            async function saveGame(showIndicator = false) {
                 if (mode === 'edit') return;
+                if (isSaving) return; // Prevent concurrent saves
+                
+                isSaving = true;
+                if (showIndicator) {
+                    showSaveIndicator('saving');
+                }
+                
                 try {
-                    // Comprehensive save of all game state
+                    // Validate critical data before saving
+                    if (typeof gameState.gold !== 'number' || isNaN(gameState.gold)) {
+                        throw new Error('Invalid gold value');
+                    }
+                    if (typeof gameState.highestRank !== 'number' || gameState.highestRank < 1 || gameState.highestRank > 18) {
+                        throw new Error('Invalid rank value');
+                    }
+                    
+                    // Comprehensive save of all game state with version
                     const saveData = {
+                        version: SAVE_VERSION,
+                        timestamp: Date.now(),
                         gameState: {
                             gold: gameState.gold,
                             medals: gameState.medals,
+                            skillPoints: gameState.skillPoints,
                             highestRank: gameState.highestRank,
                             currentStage: gameState.currentStage,
                             unlockedOfficers: gameState.unlockedOfficers,
                             prestigeRank: gameState.prestigeRank,
                             prestigeCurrency: gameState.prestigeCurrency,
                             activeDoctrine: gameState.activeDoctrine,
+                            skillTree: { ...gameState.skillTree },
                             upgrades: { ...gameState.upgrades },
                             prestigeUpgrades: { ...gameState.prestigeUpgrades },
                             missions: gameState.missions.map(m => ({ ...m }))
                         },
-                        grid: [...grid]
+                        grid: grid.map(unit => {
+                            if (!unit) return null;
+                            // Ensure all unit properties are saved
+                            return {
+                                rank: unit.rank,
+                                classIndex: unit.classIndex,
+                                isElite: unit.isElite || false,
+                                battlesSurvived: unit.battlesSurvived || 0
+                            };
+                        }),
+                        selectedIndices: [...selectedIndices] // Save squad selection
                     };
+                    
                     await lib.saveUserGameState(saveData);
+                    lastSaveTime = Date.now();
+                    
+                    if (showIndicator) {
+                        showSaveIndicator('success', '💾 Saved');
+                    }
+                    lib.log('Game saved successfully');
                 } catch(e) {
                     lib.log(`Save failed: ${e.message}`);
+                    if (showIndicator) {
+                        showSaveIndicator('error');
+                    }
+                } finally {
+                    isSaving = false;
                 }
             }
 
@@ -1104,31 +1254,95 @@
                 try {
                     const res = await lib.getUserGameState();
                     if (res && res.state) {
-                        // Restore all game state properties
-                        if (res.state.gameState) {
+                        const saveData = res.state;
+                        const saveVersion = saveData.version || 1;
+                        
+                        lib.log(`Loading save version ${saveVersion}`);
+                        
+                        // Handle version migration if needed
+                        if (saveVersion < SAVE_VERSION) {
+                            lib.log(`Migrating save from version ${saveVersion} to ${SAVE_VERSION}`);
+                            // Add migration logic here if save format changes
+                        }
+                        
+                        // Restore all game state properties with validation
+                        if (saveData.gameState) {
                             gameState = {
                                 ...gameState,
-                                ...res.state.gameState,
-                                upgrades: { ...gameState.upgrades, ...(res.state.gameState.upgrades || {}) },
-                                prestigeUpgrades: { ...gameState.prestigeUpgrades, ...(res.state.gameState.prestigeUpgrades || {}) },
-                                missions: res.state.gameState.missions || gameState.missions
+                                ...saveData.gameState,
+                                upgrades: { ...gameState.upgrades, ...(saveData.gameState.upgrades || {}) },
+                                prestigeUpgrades: { ...gameState.prestigeUpgrades, ...(saveData.gameState.prestigeUpgrades || {}) },
+                                skillTree: { ...gameState.skillTree, ...(saveData.gameState.skillTree || {}) },
+                                missions: saveData.gameState.missions || gameState.missions
                             };
+                            
+                            // Validate loaded data
+                            if (typeof gameState.gold !== 'number' || gameState.gold < 0) gameState.gold = 0;
+                            if (typeof gameState.medals !== 'number' || gameState.medals < 0) gameState.medals = 0;
+                            if (typeof gameState.highestRank !== 'number' || gameState.highestRank < 1) gameState.highestRank = 1;
+                            if (typeof gameState.currentStage !== 'number' || gameState.currentStage < 0) gameState.currentStage = 0;
                         }
-                        if (res.state.grid) {
-                            grid = res.state.grid;
+                        
+                        // Restore grid with all unit properties
+                        if (saveData.grid) {
+                            grid = saveData.grid.map(unit => {
+                                if (!unit) return null;
+                                return {
+                                    rank: unit.rank || 1,
+                                    classIndex: unit.classIndex || 0,
+                                    isElite: unit.isElite || false,
+                                    battlesSurvived: unit.battlesSurvived || 0
+                                };
+                            });
                         }
-                        lib.log('Game loaded successfully');
+                        
+                        // Restore squad selection
+                        if (saveData.selectedIndices && Array.isArray(saveData.selectedIndices)) {
+                            selectedIndices = saveData.selectedIndices.filter(idx => {
+                                return typeof idx === 'number' && idx >= 0 && idx < grid.length && grid[idx] !== null;
+                            });
+                        }
+                        
+                        const saveAge = saveData.timestamp ? Math.floor((Date.now() - saveData.timestamp) / 1000 / 60) : 0;
+                        lib.log(`Game loaded successfully (${saveAge} minutes old)`);
+                        showToast(`Progress Restored! 💾`);
                     } else {
                         lib.log('No saved game found, starting fresh');
                     }
                 } catch(e) {
                     lib.log(`Load failed: ${e.message}`);
+                    showToast('Failed to load save, starting fresh');
                 }
             }
 
             async function resetGame() {
-                try { await lib.deleteUserGameState(); } catch(e) {}
+                try { 
+                    await lib.deleteUserGameState();
+                    lib.log('Game progress deleted');
+                } catch(e) {
+                    lib.log(`Failed to delete save: ${e.message}`);
+                }
                 location.reload();
+            }
+            
+            function startAutoSave() {
+                if (mode === 'edit') return;
+                // Auto-save every 30 seconds
+                autoSaveInterval = setInterval(() => {
+                    const timeSinceLastSave = Date.now() - lastSaveTime;
+                    // Only auto-save if it's been more than 25 seconds since last save
+                    if (timeSinceLastSave > 25000) {
+                        saveGame(false); // Don't show indicator for auto-save
+                    }
+                }, 30000);
+                lib.log('Auto-save enabled (every 30 seconds)');
+            }
+            
+            function stopAutoSave() {
+                if (autoSaveInterval) {
+                    clearInterval(autoSaveInterval);
+                    autoSaveInterval = null;
+                }
             }
 
             async function submitToLeaderboard() {
@@ -1209,9 +1423,73 @@
                 resizeCanvas();
             }
 
+            const skillDefinitions = {
+                atk_power: { name: 'Raw Power', desc: '+10% Unit Attack per level', branch: 'attack', icon: '💥' },
+                atk_speed: { name: 'Rapid Fire', desc: '+5% Attack Speed per level', branch: 'attack', icon: '⚡' },
+                atk_crit: { name: 'Critical Eye', desc: '+5% Crit Chance per level', branch: 'attack', icon: '🎯' },
+                atk_combined: { name: 'Combined Arms', desc: '+5% Dmg per unique unit class in squad', branch: 'attack', icon: '🤝' },
+                atk_range: { name: 'Precision Ballistics', desc: '+5% Attack Range per level', branch: 'attack', icon: '🔭' },
+                def_hp: { name: 'Thick Skin', desc: '+10% Unit HP per level', branch: 'defense', icon: '🛡️' },
+                def_armor: { name: 'Hardened Armor', desc: '+5% Damage Reduction per level', branch: 'defense', icon: '🧱' },
+                def_healing: { name: 'Medical Training', desc: '+15% Healing Efficiency per level', branch: 'defense', icon: '🩹' },
+                def_eod: { name: 'EOD Suit Protocol', desc: '-10% AOE damage taken per level', branch: 'defense', icon: '💣' },
+                def_dodge: { name: 'Tactical Maneuvers', desc: '+3% Dodge chance per level', branch: 'defense', icon: '🏃' },
+                eco_gold: { name: 'Tax Bounty', desc: '+10% Gold from merges per level', branch: 'economy', icon: '💰' },
+                eco_spawn: { name: 'Advanced Recruitment', desc: '+5% Elite spawn chance per level', branch: 'economy', icon: '🤝' },
+                eco_discount: { name: 'Supply Chain', desc: '5% cheaper upgrades per level', branch: 'economy', icon: '📉' },
+                eco_salvage: { name: 'Battlefield Salvage', desc: 'Gain Gold for every enemy defeated', branch: 'economy', icon: '🔧' },
+                eco_missions: { name: 'Defense Contracts', desc: '+20% Gold from Missions per level', branch: 'economy', icon: '📋' }
+            };
+
+            function renderSkillTree() {
+                const branches = { attack: 'attack-skills', defense: 'defense-skills', economy: 'economy-skills' };
+                Object.values(branches).forEach(id => {
+                    const el = document.getElementById(id);
+                    if (el) el.innerHTML = '';
+                });
+                
+                const spDisplay = document.getElementById('sp-display');
+                if (spDisplay) spDisplay.textContent = gameState.skillPoints;
+
+                Object.keys(skillDefinitions).forEach(key => {
+                    const skill = skillDefinitions[key];
+                    const level = gameState.skillTree[key] || 0;
+                    const maxLevel = 10;
+                    
+                    const card = document.createElement('div');
+                    card.className = 'upgrade-card';
+                    card.style.margin = '10px 0';
+                    card.innerHTML = `
+                        <div class="card-icon" style="background:rgba(0,0,0,0.05)">${skill.icon}</div>
+                        <div class="card-details">
+                            <div class="card-title">${skill.name}</div>
+                            <div class="card-sub">Level ${level}/${maxLevel}</div>
+                            <p style="font-size:12px; color:#666;">${skill.desc}</p>
+                        </div>
+                        <button class="card-btn" ${gameState.skillPoints < 1 || level >= maxLevel ? 'disabled' : ''}>
+                            ${level >= maxLevel ? 'MAX' : 'LEARN'}
+                        </button>
+                    `;
+                    card.querySelector('button').onclick = () => {
+                        if (gameState.skillPoints >= 1 && level < maxLevel) {
+                            gameState.skillPoints--;
+                            gameState.skillTree[key]++;
+                            playSound('button_click_sound');
+                            renderSkillTree();
+                            updateUI();
+                            saveGame(true);
+                        }
+                    };
+                    const branchEl = document.getElementById(branches[skill.branch]);
+                    if (branchEl) branchEl.appendChild(card);
+                });
+            }
+
             function updateUI() {
                 if (goldCount) goldCount.textContent = Math.floor(gameState.gold);
                 if (medalCount) medalCount.textContent = gameState.medals;
+                const skillPointsCounter = document.getElementById('skill-points-count');
+                if (skillPointsCounter) skillPointsCounter.textContent = gameState.skillPoints;
                 const stage = window.gameConfig.stages[gameState.currentStage % window.gameConfig.stages.length];
                 if (stageDisplay) stageDisplay.textContent = `Wave ${gameState.currentStage + 1}: ${stage.name}`;
                 if (progressFill) progressFill.style.width = `${(gameState.highestRank / 18) * 100}%`;
@@ -1537,14 +1815,21 @@
                             }, 500);
                         }
 
+                        // Elite chance bonus from skill tree
+                        if (Math.random() < (gameState.skillTree.eco_spawn * 0.05)) {
+                            targetUnit.isElite = true;
+                        }
+
                         if (targetUnit.rank > gameState.highestRank) {
                             gameState.highestRank = targetUnit.rank;
+                            gameState.skillPoints++; // Reward skill point for new rank
                             showPromotionEffect(targetUnit.rank);
                         }
                         
                         // Combo Multiplier
                         const comboMult = 1 + (comboCount * 0.1);
-                        const gain = targetUnit.rank * 15 * comboMult * (1 + gameState.upgrades.logistics * 0.2 + (gameState.prestigeUpgrades.logistics * 0.5));
+                        const ecoGoldBonus = 1 + (gameState.skillTree.eco_gold * 0.1);
+                        const gain = targetUnit.rank * 15 * comboMult * (1 + gameState.upgrades.logistics * 0.2 + (gameState.prestigeUpgrades.logistics * 0.5)) * ecoGoldBonus;
                         gameState.gold += gain;
                         
                         trackMission('merge', 1); trackMission('rank', targetUnit.rank);
@@ -1679,11 +1964,19 @@
 
                 const docBonus = doctrines[gameState.activeDoctrine].bonus;
                 
+                const uniqueRoles = new Set(selected.map(u => window.gameConfig.classes[u.classIndex].role)).size;
+                const combinedArmsBonus = 1 + (uniqueRoles * (gameState.skillTree.atk_combined || 0) * 0.05);
+
                 battleUnits = selected.map((u, i) => {
                     const rI = window.gameConfig.ranks[u.rank-1];
                     const cI = window.gameConfig.classes[u.classIndex];
-                    let hp = u.rank * 100 * cI.multiplier.hp * (1 + gameState.upgrades.medicalSupport * 0.1);
-                    let atk = u.rank * 20 * (1 + gameState.prestigeUpgrades.tactics * 0.5) * cI.multiplier.attack * (1 + gameState.upgrades.combatTraining * 0.1);
+                    
+                    const skillHpBonus = 1 + (gameState.skillTree.def_hp * 0.1);
+                    const skillAtkBonus = 1 + (gameState.skillTree.atk_power * 0.1);
+                    const skillSpdBonus = 1 + (gameState.skillTree.atk_speed * 0.05);
+
+                    let hp = u.rank * 100 * cI.multiplier.hp * (1 + gameState.upgrades.medicalSupport * 0.1) * skillHpBonus;
+                    let atk = u.rank * 20 * (1 + gameState.prestigeUpgrades.tactics * 0.5) * cI.multiplier.attack * (1 + gameState.upgrades.combatTraining * 0.1) * skillAtkBonus * combinedArmsBonus;
                     if (gameState.activeDoctrine === 'Army') { hp *= docBonus.hp; }
                     if (gameState.activeDoctrine === 'SpecialForces' && u.rank >= 9) { atk *= docBonus.officerAtk; }
                     
@@ -1693,7 +1986,7 @@
 
                     return {
                         ...u, team: 'p', x: 50 + (i % 2) * 80, y: 100 + i * 110,
-                        hp, maxHp: hp, atk, speed: 10 * cI.multiplier.speed * (gameState.activeDoctrine === 'AirForce' && cI.role === 'harasser' ? docBonus.reconSpeed : 1),
+                        hp, maxHp: hp, atk, speed: 10 * cI.multiplier.speed * (gameState.activeDoctrine === 'AirForce' && cI.role === 'harasser' ? docBonus.reconSpeed : 1) * skillSpdBonus,
                         role: cI.role, multiplier: cI.multiplier, color: cI.color, assetId: rI.assetId, lastAtk: 0,
                         isDragging: false,
                         visual: { bob: Math.random() * Math.PI * 2, flash: 0, scale: 1, tilt: 0, muzzleFlash: 0, recoil: 0, scar: u.battlesSurvived > 5 }
@@ -2254,7 +2547,8 @@
                     if (u.role === 'support' && performance.now() - u.lastAtk > 2000) {
                         const lowAlly = allies.reduce((min, cur) => cur.hp < min.hp ? cur : min, allies[0]);
                         if (lowAlly && lowAlly.hp < lowAlly.maxHp) {
-                            lowAlly.hp = Math.min(lowAlly.maxHp, lowAlly.hp + (u.atk * 2));
+                            const healAmount = (u.atk * 2) * (1 + (gameState.skillTree.def_healing * 0.15));
+                            lowAlly.hp = Math.min(lowAlly.maxHp, lowAlly.hp + healAmount);
                             battleFloatingTexts.push({ x: lowAlly.x, y: lowAlly.y, text: `+HP`, life: 1, color: '#4CAF50' });
                             u.lastAtk = performance.now();
                             u.visual.scale = 1.2;
@@ -2277,7 +2571,8 @@
                     else if (u.role === 'aura') baseRange = 200;
                     
                     const rangeMult = u.multiplier?.range || 1;
-                    const range = baseRange * rangeMult;
+                    const skillRangeBonus = 1 + (gameState.skillTree.atk_range * 0.05);
+                    const range = baseRange * rangeMult * skillRangeBonus;
 
                     // Ally separation to prevent units from stacking on top of each other
                     allies.forEach(other => {
@@ -2297,7 +2592,7 @@
                         u.x += Math.cos(angle) * u.speed * dt * 25;
                         u.y += Math.sin(angle) * u.speed * dt * 25;
                         u.visual.tilt = Math.sin(performance.now() / 100) * 0.2;
-                    } else if (performance.now() - u.lastAtk > 1000 / (u.team === 'p' && gameState.activeDoctrine === 'Marines' ? 1.25 : 1)) {
+                    } else if (performance.now() - u.lastAtk > 1000 / ((u.team === 'p' && gameState.activeDoctrine === 'Marines' ? 1.25 : 1) * (u.team === 'p' ? (1 + (gameState.skillTree.atk_speed * 0.05)) : 1))) {
                         u.lastAtk = performance.now();
                         u.visual.recoil = 12;
                         u.visual.muzzleFlash = 1.0;
@@ -2308,7 +2603,7 @@
                             if (u.role === 'harasser' && target.role === 'tank') finalDmg *= 1.5;
                             if (u.role === 'tank' && target.role === 'frontline') finalDmg *= 1.5;
                         }
-                        battleProjectiles.push({ x: u.x, y: u.y, target, dmg: finalDmg, speed: 600, color: u.color, isSplash: u.role === 'aoe' });
+                        battleProjectiles.push({ x: u.x, y: u.y, target, dmg: finalDmg, speed: 600, color: u.color, isSplash: u.role === 'aoe', attackerTeam: u.team });
                     }
                 });
 
@@ -2336,19 +2631,48 @@
                             }
                             targets.forEach(t => { 
                                 if (Math.hypot(t.x - p.x, t.y - p.y) < 80) {
-                                    t.hp -= p.dmg;
+                                    // DODGE CHECK
+                                    if (t.team === 'p' && Math.random() < (gameState.skillTree.def_dodge * 0.03)) {
+                                        battleFloatingTexts.push({ x: t.x, y: t.y, text: `MISS!`, life: 0.8, color: '#FFF' });
+                                        return;
+                                    }
+
+                                    let taken = p.dmg;
+                                    if (t.team === 'p') {
+                                        taken *= (1 - (gameState.skillTree.def_armor * 0.05));
+                                        // EOD BONUS
+                                        taken *= (1 - (gameState.skillTree.def_eod * 0.1));
+                                    }
+                                    t.hp -= taken;
                                     t.visual.flash = 1;
                                     t.visual.tilt = (Math.random() - 0.5) * 0.8;
                                     t.visual.recoil = 20;
-                                    battleFloatingTexts.push({ x: t.x, y: t.y, text: `-${Math.floor(p.dmg)}`, life: 1, color: '#ff4444' });
+                                    battleFloatingTexts.push({ x: t.x, y: t.y, text: `-${Math.floor(taken)}`, life: 1, color: '#ff4444' });
                                 }
                             });
                         } else {
-                            p.target.hp -= p.dmg;
+                            // DODGE CHECK
+                            if (p.target.team === 'p' && Math.random() < (gameState.skillTree.def_dodge * 0.03)) {
+                                battleFloatingTexts.push({ x: p.target.x, y: p.target.y, text: `MISS!`, life: 0.8, color: '#FFF' });
+                                battleProjectiles.splice(i, 1);
+                                return;
+                            }
+
+                            let taken = p.dmg;
+                            if (p.target.team === 'p') taken *= (1 - (gameState.skillTree.def_armor * 0.05));
+                            
+                            // Crit logic
+                            let isCrit = false;
+                            if (p.attackerTeam === 'p' && Math.random() < (gameState.skillTree.atk_crit * 0.05)) {
+                                taken *= 2;
+                                isCrit = true;
+                            }
+
+                            p.target.hp -= taken;
                             p.target.visual.flash = 1;
                             p.target.visual.tilt = (Math.random() - 0.5) * 0.5;
                             p.target.visual.recoil = 10;
-                            battleFloatingTexts.push({ x: p.target.x, y: p.target.y, text: `-${Math.floor(p.dmg)}`, life: 1, color: '#ff4444' });
+                            battleFloatingTexts.push({ x: p.target.x, y: p.target.y, text: (isCrit ? 'CRIT! ' : '') + `-${Math.floor(taken)}`, life: 1, color: isCrit ? '#FFD700' : '#ff4444' });
                         }
                         battleProjectiles.splice(i, 1);
                     } else {
@@ -2365,6 +2689,13 @@
 
                 const deadUnits = battleUnits.filter(u => u.hp <= 0);
                 if (deadUnits.length > 0) morale -= deadUnits.length * 10;
+                
+                const deadEnemiesCount = battleEnemies.filter(e => e.hp <= 0).length;
+                if (deadEnemiesCount > 0 && (gameState.skillTree.eco_salvage || 0) > 0) {
+                    const salvage = deadEnemiesCount * (gameState.currentStage + 1) * 20 * gameState.skillTree.eco_salvage;
+                    gameState.gold += salvage;
+                }
+
                 battleUnits = battleUnits.filter(u => u.hp > 0);
                 battleEnemies = battleEnemies.filter(e => e.hp > 0);
             }
@@ -2385,6 +2716,12 @@
                     const g = (gameState.currentStage + 1) * 100;
                     gameState.gold += g; gameState.medals += (gameState.currentStage + 1) % 5 === 0 ? 5 : 1;
                     
+                    // Skill points reward for bosses (every 5 stages)
+                    if ((gameState.currentStage + 1) % 5 === 0) {
+                        gameState.skillPoints += 1;
+                        showToast("BOSS CLEARED! +1 Skill Point ⭐");
+                    }
+
                     // Increment battles survived for units in the grid
                     const deployedCount = 4 + gameState.upgrades.tacticalCapacity;
                     for (let i=0; i < grid.length; i++) {
@@ -2396,7 +2733,7 @@
                     // Submit to leaderboard after victory
                     submitToLeaderboard();
                 } else showToast("DEFEAT! Regroup and upgrade.");
-                updateUI(); renderGrid(); saveGame();
+                updateUI(); renderGrid(); saveGame(true);
             }
 
             // Upgrades & Missions
@@ -2404,7 +2741,8 @@
                 upgradeList.innerHTML = '';
                 window.gameConfig.upgrades.forEach(u => {
                     const lvl = gameState.upgrades[u.key] || 0;
-                    const cost = Math.floor(u.baseCost * Math.pow(u.growth, lvl));
+                    const discount = 1 - (gameState.skillTree.eco_discount * 0.05);
+                    const cost = Math.floor(u.baseCost * Math.pow(u.growth, lvl) * discount);
                     const card = document.createElement('div');
                     card.className = 'upgrade-card';
                     
@@ -2428,7 +2766,7 @@
                     card.querySelector('button').onclick = () => {
                         if (gameState.gold >= cost) {
                             gameState.gold -= cost; gameState.upgrades[u.key]++;
-                            playSound('button_click_sound'); renderUpgrades(); updateUI(); saveGame();
+                            playSound('button_click_sound'); renderUpgrades(); updateUI(); saveGame(true);
                         }
                     };
                     upgradeList.appendChild(card);
@@ -2450,8 +2788,12 @@
                         <button class="card-btn" ${m.current < m.target || m.claimed ? 'disabled' : ''}>${m.claimed ? 'CLAIMED' : 'CLAIM'}</button>`;
                     card.querySelector('button').onclick = () => {
                         if (m.current >= m.target && !m.claimed) {
-                            gameState.gold += m.reward; m.claimed = true;
-                            playSound('button_click_sound'); renderMissions(); updateUI(); saveGame();
+                            const contractBonus = 1 + ((gameState.skillTree.eco_missions || 0) * 0.2);
+                            const reward = m.reward * contractBonus;
+                            gameState.gold += reward; 
+                            m.claimed = true;
+                            playSound('button_click_sound'); renderMissions(); updateUI(); saveGame(true);
+                            showToast(`Mission Reward: +🪙${Math.floor(reward)}`);
                         }
                     };
                     missionList.appendChild(card);
@@ -2535,7 +2877,7 @@
                     card.querySelector('button').onclick = () => {
                         if (gameState.prestigeCurrency >= cost) {
                             gameState.prestigeCurrency -= cost; gameState.prestigeUpgrades[u.key]++;
-                            playSound('button_click_sound'); renderPrestige(); saveGame();
+                            playSound('button_click_sound'); renderPrestige(); saveGame(true);
                         }
                     };
                     prestigeUpgradesEl.appendChild(card);
@@ -2561,7 +2903,7 @@
                                      <p style="font-size: 12px; color: #666;">${doctrineDetail}</p>`;
                     card.onclick = () => {
                         gameState.activeDoctrine = d.name.replace(' ', '');
-                        renderDoctrines(); showToast(`Doctrine: ${d.name} Activated!`); saveGame();
+                        renderDoctrines(); showToast(`Doctrine: ${d.name} Activated!`); saveGame(true);
                     };
                     doctrineListEl.appendChild(card);
                 });
@@ -2585,7 +2927,7 @@
                 Object.keys(gameState.upgrades).forEach(k => gameState.upgrades[k] = 0);
                 
                 showToast(`LEGACY CREATED: The ${legacyName}! +${points} Stars`);
-                updateUI(); renderGrid(); renderPrestige(); saveGame();
+                updateUI(); renderGrid(); renderPrestige(); saveGame(true);
                 // Submit to leaderboard after prestige
                 submitToLeaderboard();
             };
@@ -2631,6 +2973,7 @@
                     currentView = v; playSound('button_click_sound');
                     if (v === 'upgrades') renderUpgrades();
                     if (v === 'missions') renderMissions();
+                    if (v === 'skills') renderSkillTree();
                     if (v === 'prestige') renderPrestige();
                     if (v === 'doctrine') renderDoctrines();
                     if (v === 'battle') {
@@ -2663,6 +3006,7 @@
 
             spawnButton.onclick = () => { initAudio(); spawnUnit(); };
             document.getElementById('settings-button').onclick = () => document.getElementById('settings-modal').classList.add('active');
+            document.getElementById('manual-save-button').onclick = () => { saveGame(true); };
             document.getElementById('settings-close').onclick = () => document.getElementById('settings-modal').classList.remove('active');
             document.getElementById('reset-button').onclick = () => { document.getElementById('settings-modal').classList.remove('active'); document.getElementById('reset-confirm-modal').classList.add('active'); };
             document.getElementById('reset-confirm-no').onclick = () => document.getElementById('reset-confirm-modal').classList.remove('active');
@@ -2680,10 +3024,20 @@
             await loadGame();
             initGame();
             
-            // Submit initial score to leaderboard after loading
+            // Start auto-save system
             if (mode === 'play') {
+                startAutoSave();
                 submitToLeaderboard();
             }
+            
+            // Save before page unload
+            window.addEventListener('beforeunload', () => {
+                if (mode === 'play') {
+                    stopAutoSave();
+                    // Attempt synchronous save on unload (may not always work)
+                    navigator.sendBeacon && saveGame(false);
+                }
+            });
 
             if (mode === 'edit') {
                 editIndicator.classList.add('active');
